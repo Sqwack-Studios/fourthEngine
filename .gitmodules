@@ -1,6 +1,0 @@
-[submodule "fourth_Engine/vendor/spdlog"]
-	path = fourth_Engine/vendor/spdlog
-	url = https://github.com/Sqwack-Studios/spdlog.git
-[submodule "fourth_Engine/vendor/assimp"]
-	path = fourth_Engine/vendor/assimp
-	url = https://github.com/Sqwack-Studios/assimp.git
