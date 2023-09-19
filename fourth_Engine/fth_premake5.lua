@@ -143,7 +143,19 @@ project "fourth_Engine"
 			optimize "on"
 			symbols "on"
 
+		links
+		{
+			"%{wks.location}/%{prj.name}/vendor/DirectXTex/lib/bin_Release/DirectXTex"
+			-- "%{wks.location}/bin/Debug-windows-x86_64/assimp/zlibstaticd"
+	
+		}
 		filter "configurations:Dist"
 			defines "ENGINE_DIST"
 			defines "NDEBUG"
 			optimize "on"
+		links
+		{
+			"%{wks.location}/%{prj.name}/vendor/DirectXTex/lib/bin_Release/DirectXTex"
+			-- "%{wks.location}/bin/Debug-windows-x86_64/assimp/zlibstaticd"
+	
+		}
