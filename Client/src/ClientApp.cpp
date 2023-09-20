@@ -686,9 +686,9 @@ void ClientApp::CreateShowcaseScene()
 		math::Vector3 position{ math::Vector3::Zero };
 
 		//Wrap this process into a Higher level light function
-		constexpr uint8_t NUM_POINT{ 2 };
+		constexpr uint8_t NUM_POINT{ 1 };
 		shading::EmissionOnly::InstanceData emissiveInstance[NUM_POINT];
-		const math::Vector3 radiance[NUM_POINT] = { 5000.0f * DirectX::Colors::Red.v , 5000.0f * DirectX::Colors::White.v };
+		const math::Vector3 radiance[NUM_POINT] = { 5000.0f * DirectX::Colors::White.v};
 
 		Handle<shading::EmissionOnly::PerModel> emissionModelHandle = MeshSystem::Get().addEmissionOnlyModel(ModelManager::GetUnitSphereSmooth());
 		shading::EmissionOnly::Material emissiveMat[10] = {};
@@ -707,29 +707,31 @@ void ClientApp::CreateShowcaseScene()
 		transform.position = {  5.0f, 5.0f, 0.0f };
 		emissiveID = TransformSystem::Get().AddTransform(transform);
 
-		LightSystem::Get().AddPointSphereLight(radiance[1], radius, position, emissiveID);
+		//LightSystem::Get().AddPointSphereLight(radiance[1], radius, position, emissiveID);
 
-		emissiveInstance[1].emissionColor = radiance[1];
-		emissiveInstance[1].handle_modelToWorld = emissiveID;
+		//emissiveInstance[1].emissionColor = radiance[1];
+		//emissiveInstance[1].handle_modelToWorld = emissiveID;
 
 
-		MeshSystem::Get().addEmissionOnlyInstances(emissionModelHandle, matHandles, emissiveInstance, 2, 1);
+		MeshSystem::Get().addEmissionOnlyInstances(emissionModelHandle, matHandles, emissiveInstance, NUM_POINT, 1);
 
 
 
 
 		constexpr math::Vector3 emitterPos{ 0.0f, 0.0f, 0.0f };
 		const math::Color emitterTint{ DirectX::Colors::Black.v };
-		constexpr float spawnRadius{ 0.5f };
-		Handle<math::Matrix> emitterParentID{ emissiveID };
+		constexpr float spawnRadius{ 0.01f };
+		//Handle<math::Matrix> emitterParentID{ emissiveID };
+		Handle<math::Matrix> emitterParentID{ Handle<math::Matrix>::Invalid() };
+
 		constexpr math::Vector2 emitterXSpeedRange{ -0.25f, 0.25f };
 		constexpr math::Vector2 emitterZSpeedRange{ -0.25f, 0.25f };
 		constexpr math::Vector2 emitterInitialSize{ 1.0f, 1.0f };
 		constexpr math::Vector2 emitterRotationRange{ 0.0f, DirectX::XM_PIDIV2 };
-		constexpr float emitterSizeIncreaseRate{ 0.01f };
-		constexpr float emitterYspeed{ 2.5f };
-		constexpr float emitterParticleLifetime{ 2.0f };
-		constexpr float emitterMaxParticles{ 100.0f };
+		constexpr float emitterSizeIncreaseRate{ 2.5f };
+		constexpr float emitterYspeed{ 0.0f };
+		constexpr float emitterParticleLifetime{ 0.5f };
+		constexpr float emitterMaxParticles{ 1.0f };
 		constexpr float spawnRate{ emitterMaxParticles / emitterParticleLifetime };
 
 		ParticleSystem::Get().AddSmokeEmitter(emitterPos, spawnRate, emitterTint, spawnRadius, emitterParentID, emitterXSpeedRange, emitterZSpeedRange, emitterInitialSize, emitterRotationRange, emitterSizeIncreaseRate, emitterYspeed, emitterParticleLifetime, emitterMaxParticles);
