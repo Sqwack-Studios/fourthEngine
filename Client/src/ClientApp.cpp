@@ -674,7 +674,7 @@ void ClientApp::CreateShowcaseScene()
 
 	//moon luminance : ~5000 cd/sr. moon w ~ 6.418e-5
 	math::Vector3 dir{ 1.0f, -1.0f, 1.0f };
-	LightSystem::Get().AddDirectionalSphereLight(25000.0f * DirectX::Colors::White.v,  { 1.0f, -1.0f, 1.0f }, 6.418e-5f, Handle<math::Matrix>::Invalid());
+	LightSystem::Get().AddDirectionalSphereLight(12000.0f * DirectX::Colors::White.v,  { 1.0f, -1.0f, 1.0f }, 6.418e-5f, Handle<math::Matrix>::Invalid());
 
 	//1200 lumens (luminous flux, or phi light bulbs)
 	{
@@ -688,7 +688,7 @@ void ClientApp::CreateShowcaseScene()
 		//Wrap this process into a Higher level light function
 		constexpr uint8_t NUM_POINT{ 2 };
 		shading::EmissionOnly::InstanceData emissiveInstance[NUM_POINT];
-		const math::Vector3 radiance[NUM_POINT] = { 10000.0f * DirectX::Colors::OrangeRed.v , 10000.0f * DirectX::Colors::Red.v };
+		const math::Vector3 radiance[NUM_POINT] = { 5000.0f * DirectX::Colors::Red.v , 5000.0f * DirectX::Colors::White.v };
 
 		Handle<shading::EmissionOnly::PerModel> emissionModelHandle = MeshSystem::Get().addEmissionOnlyModel(ModelManager::GetUnitSphereSmooth());
 		shading::EmissionOnly::Material emissiveMat[10] = {};
