@@ -65,7 +65,7 @@ with Matrices, use DirectXMath LH functions.
 implementation in their own class, but Ray-Plane intersection was implemented in Ray 
 ->Modified Ray-Triangle intersection algorithm to give information about which face has been intersected. (DirectXCollision.h and DirectXCollision.inl)
 
-![alt text](https://imgur.com/zabDCKX)
-![alt text](https://imgur.com/SZKA769)
-![alt text](https://imgur.com/RWC3HIE)
-![alt text](https://imgur.com/3EO5EzQ)
+![alt text](docs/showcase4)
+![alt text](docs/bloom)
+![alt text](docs/6wayParticles)
+![alt text](docs/gpuParticleSys)
