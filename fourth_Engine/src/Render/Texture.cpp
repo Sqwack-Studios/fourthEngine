@@ -98,7 +98,7 @@ namespace fth
 	     txDsc.depth,
 	     txDsc.arraySize,
 	     txDsc.numMips,
-	     txDsc.isCubemap ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0,
+	     txDsc.isCubemap ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0u,
 	     0,
 	     txDsc.format,
 	     static_cast<DirectX::TEX_DIMENSION>(txDsc.dimension) };

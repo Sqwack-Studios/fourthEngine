@@ -56,7 +56,7 @@ float4 main(VSOut vout) : SV_TARGET
 	{
 		float3 albedo = g_albedo.Load(uint3(vout.clip.xy, 0));
 		float  metalness = g_roughMetal.Load(uint3(vout.clip.xy, 0)).y;
-		float3 microNormal = unpackOctahedron(g_normals.Load(uint3(vout.clip.xy, 0)));
+		float3 microNormal = unpackOctahedron(g_normals.Load(uint3(vout.clip.xy, 0)).xy);
 
 		float3 diffuseColor = (1.0f - metalness) * albedo;
 		float3 F0 = fresnel0(albedo, metalness);

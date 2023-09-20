@@ -53,7 +53,7 @@ namespace fth
 		initialRange.sphereDrawArgs = diffuseDrawArgs;
 
 #endif
-		uint32_t rangeCount{ sizeof(ringBufferRange) / sizeof(uint32_t) };
+		uint16_t rangeCount{ sizeof(ringBufferRange) / sizeof(uint32_t) };
 		bfDsc.numElements = rangeCount;
 		m_particlesRangeBuffer.init(rangeCount, D3D11_USAGE_DEFAULT, D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE, 0, D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS, &initialRange);
 		m_particlesRangeUAV.CreateBufferUAV(m_particlesRangeBuffer.operator->(), DXGI_FORMAT::DXGI_FORMAT_R32_TYPELESS, bfDsc, D3D11_BUFFER_UAV_FLAG_RAW);

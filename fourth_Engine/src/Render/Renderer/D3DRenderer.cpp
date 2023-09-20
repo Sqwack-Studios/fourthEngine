@@ -321,8 +321,8 @@ namespace fth
 
 			dsc.numMips = 1;
 
-			dsc.width = static_cast<uint32_t>(nextPoT(static_cast<uint32_t>(frameWidth)));
-			dsc.height = static_cast<uint32_t>(nextPoT(static_cast<uint32_t>(frameHeight)));
+			dsc.width = static_cast<uint16_t>(nextPoT(static_cast<uint32_t>(frameWidth)));
+			dsc.height = static_cast<uint16_t>(nextPoT(static_cast<uint32_t>(frameHeight)));
 			m_realXYZimX.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_UNORDERED_ACCESS);
 
 			dsc.format = DXGI_FORMAT_R16G16_FLOAT;
@@ -352,10 +352,10 @@ namespace fth
 
 			};
 
-			m_depthPass2D_VS.LoadShader(L"ShadowPass_2D_VS.cso", ied, std::size(ied));
+			m_depthPass2D_VS.LoadShader(L"ShadowPass_2D_VS.cso", ied, static_cast<uint32_t>(std::size(ied)));
 			m_fullPassPassthroughVS.LoadShader(L"Passthrough_VS.cso", nullptr, 0);
 
-			m_depthPassCube_VS.LoadShader(L"ShadowPass_Cube_VS.cso", ied, std::size(ied));
+			m_depthPassCube_VS.LoadShader(L"ShadowPass_Cube_VS.cso", ied, static_cast<uint32_t>(std::size(ied)));
 			m_depthPassCube_GS.LoadShader(L"ShadowPass_Cube_GS.cso");
 
 			m_fft_CS.loadShader(L"FFT_CS.cso");
@@ -607,10 +607,16 @@ namespace fth
 			txDsc.arraySize = 1;
 			txDsc.isCubemap = false;
 
-			//DX_CALL(s_device->CheckMultisampleQualityLevels(hdrFormat, multisamples, reinterpret_cast<UINT*>(&m_maxMSAA_qualitySupported)));
-			//txDsc.multisamples = multisamples;
-			//txDsc.msQuality = m_maxMSAA_qualitySupported - 1;
+			if (multisamples != 1)
+			{
+				//MSAA is not implemented in the pipeline right now.
 
+				/*DX_CALL(s_device->CheckMultisampleQualityLevels(hdrFormat, multisamples, reinterpret_cast<UINT*>(&m_maxMSAA_qualitySupported)));
+				txDsc.multisamples = multisamples;
+				txDsc.msQuality = m_maxMSAA_qualitySupported - 1;*/
+
+			}
+	
 			//Init GBuffer
 			for (uint8_t i = 0; i < NUM_G_TEXTURES; ++i)
 			{

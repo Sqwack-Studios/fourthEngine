@@ -98,15 +98,17 @@ float3 unpackNormalMap(in float3 txSample, in bool invertY, in bool buildBlue)
 	if (invertY)
 		normalRGB.g = 1.0f - normalRGB.g;
 
-	float3 remap = normalRGB * 2.0f - 1.0f;
+	//remap
+    float3 returnValue = normalRGB * 2.0f - 1.0f;
 
 
 	if (buildBlue)
 	{
-		return float3(remap.rg, sqrt(saturate(1.0f - dot(remap.rg, remap.rg))));
+		
+        returnValue.b = sqrt(saturate(1.0f - dot(returnValue.rg, returnValue.rg)));
 	}
 
-	return remap;
+	return returnValue;
 
 }
 

@@ -82,12 +82,12 @@ namespace fth::shading
 		uint32_t computeInstanceHandle(uint32_t flag) const;
 
 		//Num of bits destined to composite an instanceID
-		uint32_t  instanceMask;
-		uint8_t   modelBits;
-		uint32_t  modelMask;
-		uint32_t  materialMask;
-		uint8_t   materialBits;
-		uint8_t   instanceBits;
+		uint32_t  m_instanceMask;
+		uint8_t   m_modelBits;
+		uint32_t  m_modelMask;
+		uint32_t  m_materialMask;
+		uint8_t   m_materialBits;
+		uint8_t   m_instanceBits;
 
 	private:
 
@@ -104,7 +104,7 @@ namespace fth::shading
 		{
 			uint32_t modelIndex{};
 			{
-				if (group.m_perModel.size() - 1 == group.modelMask)
+				if (group.m_perModel.size() - 1 == group.m_modelMask)
 				{
 					outHandle = Handle<TGroupPerModel>::Invalid();
 				}
@@ -132,9 +132,9 @@ namespace fth::shading
 		template<typename TGroup, typename TGroupMaterial, typename TGroupPerModel>
 		void addMaterial(TGroup& group, const TGroupMaterial* materials, Handle<TGroupPerModel> modelIdx, Handle<TGroupMaterial>* outMaterialIdx)
 		{
-			uint32_t cmpMask{ (modelIdx << (group.instanceBits + group.materialBits) ) & group.modelMask };
+			uint32_t cmpMask{ (modelIdx << (group.m_instanceBits + group.m_materialBits) ) & group.m_modelMask };
 
-			if (!modelIdx.isValid() || (cmpMask) == group.modelMask)
+			if (!modelIdx.isValid() || (cmpMask) == group.m_modelMask)
 			{
 				LOG_ENGINE_WARN("addMaterial", "provided Handle<PerModel> is invalid, material was ignored");
 				return;
@@ -151,7 +151,7 @@ namespace fth::shading
 
 				uint32_t numMaterials{ static_cast<uint32_t>(perMesh.perMaterial.size()) };
 
-				if (numMaterials - 1 == group.materialMask)
+				if (numMaterials - 1 == group.m_materialMask)
 				{
 					outMaterialIdx[meshIdx] = Handle<TGroup::Material>::Invalid();
 					LOG_ENGINE_WARN("addMaterial", "budget materials for model handle{0}, mesh idx{1} is full", modelIdx.id, meshIdx);
@@ -208,7 +208,7 @@ namespace fth::shading
 					uint32_t matIdx{ static_cast<uint32_t>(materialIdx[meshIdx].id)};
 					TGroup::PerMaterial& perMaterial{ perMesh.perMaterial[matIdx]};
 					//Verify if there's enough space in for specified mesh material
-					uint32_t freeSpace{ (group.instanceMask - 1) - static_cast<uint32_t>(perMaterial.instances.size()) };
+					uint32_t freeSpace{ (group.m_instanceMask - 1) - static_cast<uint32_t>(perMaterial.instances.size()) };
 
 					Handle<TGroup::InstanceData> handle;
 
@@ -226,8 +226,8 @@ namespace fth::shading
 					//Build ID
 					Handle<CombinedID>& id = outIDs[instance * numMeshes + meshIdx].composedID;
 
-					id.id &= ~(group.modelMask | group.materialMask | group.instanceMask);
-					id.id |= (modelIdx << (group.materialBits + group.instanceBits) ) | (matIdx << group.instanceBits) | handle.id;
+					id.id &= ~(group.m_modelMask | group.m_materialMask | group.m_instanceMask);
+					id.id |= (modelIdx << (group.m_materialBits + group.m_instanceBits) ) | (matIdx << group.m_instanceBits) | handle.id;
 					//id.id = (1 << group.instanceBits);
 
 					++group.m_numInstances;

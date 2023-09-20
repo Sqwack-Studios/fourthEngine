@@ -68,8 +68,8 @@ namespace fth
 			const TextureDsc& GetDesc() const { return m_texDsc; }
 			bool isCubemap() const { return m_texDsc.isCubemap; }
 
-			uint32_t Width() const { return m_texDsc.width; }
-			uint32_t Height() const { return m_texDsc.height; }
+			uint16_t Width() const { return m_texDsc.width; }
+			uint16_t Height() const { return m_texDsc.height; }
 			uint16_t NumMips() const { return m_texDsc.numMips; }
 			uint16_t Multisamples() const { return m_texDsc.multisamples; }
 			DXGI_FORMAT Format() const { return m_texDsc.format; }

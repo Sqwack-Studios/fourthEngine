@@ -19,9 +19,9 @@ namespace fth
 		return mesh.GetVertex(index).position;
 	}
 
-	TriangleOctree::TriangleOctree(){}
+	TriangleOctree::TriangleOctree() noexcept{}
 
-	TriangleOctree::TriangleOctree(TriangleOctree&& otherOctree) :
+	TriangleOctree::TriangleOctree(TriangleOctree&& otherOctree) noexcept :
 		m_mesh(otherOctree.m_mesh),
 		m_triangles(std::move(otherOctree.m_triangles)),
 		m_box(otherOctree.m_box),
@@ -64,7 +64,6 @@ namespace fth
 		m_mesh = &mesh;
 		m_children = nullptr;
 
-		const float eps = 1e-5f;
 
 		if (octetIndex % 2 == 0)
 		{

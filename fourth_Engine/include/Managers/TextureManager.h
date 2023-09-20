@@ -106,7 +106,9 @@ namespace fth
 
 		void LoadTextures(Texture& dst, const std::wstring& textureFullPath);
 		void ExportToDDS(const Texture& src, FileFormat fmt, const std::string& fileName, bool generateMips);
-		void ExportNonCompressed(const Texture& src, FileFormat fmt, const std::string& fileName, bool generateMips);
+
+		//TODO: ExportNonCompressed texture
+		//void ExportNonCompressed(const Texture& src, FileFormat fmt, const std::string& fileName, bool generateMips);
 	private:
 		
 		//Any texture is in this map

@@ -100,14 +100,24 @@ float horizonFalloffFactor(in float3 macronormal, in float lightRadius, in float
 float3 approximateClosestSphereDir(out bool intersects, float3 reflectionDir, float sphereCos,
     float3 sphereRelPos, float3 sphereDir, float sphereDist, float sphereRadius)
 {
+    float3 returnValue;
     float RoS = dot(reflectionDir, sphereDir);
 
     intersects = RoS >= sphereCos;
-    if (intersects) return reflectionDir;
-    if (RoS < 0.0) return sphereDir;
-
+    if (intersects)
+    {
+        returnValue = reflectionDir;
+    }
+	
+     if (RoS < 0.0f)
+    {
+        returnValue = sphereDir;
+    }
     float3 closestPointDir = normalize(reflectionDir * sphereDist * RoS - sphereRelPos);
-    return normalize(sphereRelPos + sphereRadius * closestPointDir);
+
+    returnValue = normalize(sphereRelPos + sphereRadius * closestPointDir);
+
+    return returnValue;
 }
 
 // Input dir and NoD is N and NoL in a case of lighting computation 

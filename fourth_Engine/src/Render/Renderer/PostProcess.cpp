@@ -99,14 +99,14 @@ namespace fth::renderer
 
 
 
-	void PostProcess::resolveBloom_CoD_Siggraph(
-		const ShaderResourceView& src,
-		uint16_t width,
-		uint16_t height,
-		uint8_t numMips,
-		const UnorderedAccessView* targetUAVs,
-		const ShaderResourceView* targetSRVs)
-	{
+	//void PostProcess::resolveBloom_CoD_Siggraph(
+	//	const ShaderResourceView& src,
+	//	uint16_t width,
+	//	uint16_t height,
+	//	uint16_t numMips,
+	//	const UnorderedAccessView* targetUAVs,
+	//	const ShaderResourceView* targetSRVs)
+	//{
 		//1st- Downsample src into MIP 0
 //2nd- Gaussian MIP N, using MIP N-1 as SRV
 //3nd- Mix MIP N, using MIP N+1 as SRV
@@ -131,7 +131,7 @@ namespace fth::renderer
 
 
 
-		m_bloomGaussian_CS.bind();
+		//m_bloomGaussian_CS.bind();
 
 
 
@@ -204,28 +204,15 @@ namespace fth::renderer
 		//	ComputeShader::dispatch((mipWidth + 7) / 8, (mipHeight + 7) / 8, 1);
 		//}
 
-		ShaderResourceView::ClearCS(TX_HDR_RESOLVE_SLOT);
-		UnorderedAccessView::ClearCS(RW_DS_BLOOM_HDR_SLOT);
-	}
-
-	void PostProcess::resolveBloom_downsampleGaussian_upsampleBilinear(
-		const ShaderResourceView& src,
-		uint16_t width,
-		uint16_t height,
-		uint8_t numMips,
-		const UnorderedAccessView* targetUAVs,
-		const ShaderResourceView* targetSRVs,
-		const UnorderedAccessView* gaussUAVs,
-		const ShaderResourceView* gaussSRVs)
-	{
-
-	}
+	//	ShaderResourceView::ClearCS(TX_HDR_RESOLVE_SLOT);
+	//	UnorderedAccessView::ClearCS(RW_DS_BLOOM_HDR_SLOT);
+	//}
 
 	void PostProcess::resolveBloom_downsampleCoD_upsampleBilinearGaussian(
 		const ShaderResourceView& src,
 		uint16_t width,
 		uint16_t height,
-		uint8_t numMips,
+		uint16_t numMips,
 		const UnorderedAccessView* targetUAVs,
 		const ShaderResourceView* targetSRVs,
 		const UnorderedAccessView* downsampleUAVs,
@@ -266,7 +253,7 @@ namespace fth::renderer
 		m_bloomGaussian_CS.bind();
 
 
-		for (uint8_t N = numMips - 1; N > 0; --N)
+		for (uint8_t N = numMips - 1u; N > 0u; --N)
 		{
 
 			//1st horizontal pass, no composite
@@ -358,31 +345,9 @@ namespace fth::renderer
 
 	}
 
-	void PostProcess::resolveBloom_downsampleGaussian(
-		const ShaderResourceView& src,
-		uint16_t width,
-		uint16_t height,
-		uint8_t numMips,
-		const UnorderedAccessView* targetUAVs,
-		const ShaderResourceView* targetSRVs,
-		const UnorderedAccessView* gaussUAVs,
-		const ShaderResourceView* gaussSRVs)
-	{
-
-	}
 
 
-	//TODO
-	void PostProcess::resolveBloom_FFT_convPSF(
-		const ShaderResourceView& src,
-		const ShaderResourceView& psf,
-		uint16_t width,
-		uint16_t height,
-		uint8_t numMips
-		/**/)
-	{
 
-	}
 }
 
 

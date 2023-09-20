@@ -18,9 +18,9 @@ namespace fth::shading
 		srcModel(srcModel)
 	{
 		perMesh.resize(srcModel->GetNumMeshes());
-		for (PerMesh& perMesh : this->perMesh)
+		for (PerMesh& itPerMesh : this->perMesh)
 		{
-			perMesh.perMaterial.resize(1);
+			itPerMesh.perMaterial.resize(1);
 		}
 	}
 

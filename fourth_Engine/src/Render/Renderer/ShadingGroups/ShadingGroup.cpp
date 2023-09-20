@@ -18,29 +18,29 @@ namespace fth::shading
 			}
 			return mask;
 		};
-		instanceBits = inInstanceBits;
-		instanceMask = generateBitmask(inInstanceBits, 0);
+		m_instanceBits = inInstanceBits;
+		m_instanceMask = generateBitmask(inInstanceBits, 0);
 
-		modelBits = inModelBits;
-		modelMask = generateBitmask(inModelBits, inMaterialBits + inInstanceBits);
+		m_modelBits = inModelBits;
+		m_modelMask = generateBitmask(inModelBits, inMaterialBits + inInstanceBits);
 
-		materialBits = inMaterialBits;
-		materialMask = generateBitmask(inMaterialBits, inInstanceBits);
+		m_materialBits = inMaterialBits;
+		m_materialMask = generateBitmask(inMaterialBits, inInstanceBits);
 
 		
 	}
 
 	uint32_t IShadingGroup::computeModelIdx(uint32_t flag) const
 	{
-		return (flag & modelMask) >> (instanceBits + materialBits);
+		return (flag & m_modelMask) >> (m_instanceBits + m_materialBits);
 	}
 
 	uint32_t IShadingGroup::computeMaterialIdx(uint32_t flag) const
 	{
-		return (flag & materialMask) >> instanceBits;
+		return (flag & m_materialMask) >> m_instanceBits;
 	}
 	uint32_t IShadingGroup::computeInstanceHandle(uint32_t flag) const
 	{
-		return (flag & instanceMask);
+		return (flag & m_instanceMask);
 	}
 }

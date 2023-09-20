@@ -499,13 +499,14 @@ namespace fth
 		handle.invalidate();
 	}
 
+	//TODO: Add invalid model
 	const std::shared_ptr<Model>& MeshSystem::getModelByHandle(Handle<ModelInstance> handle) const
 	{
 		const ModelInstance& modelInstance{ m_modelInstances[handle].perMeshInstance };
 
-		uint32_t numMeshes{ static_cast<uint32_t>(modelInstance.perMeshInstance.size()) };
-		ShadingGroupIDs shadingID{ static_cast<ShadingGroupIDs>((modelInstance.perMeshInstance[0].composedID >> 24) & shadingMask) };
+		//uint32_t numMeshes{ static_cast<uint32_t>(modelInstance.perMeshInstance.size()) };
 
+		ShadingGroupIDs shadingID{ static_cast<ShadingGroupIDs>((modelInstance.perMeshInstance[0].composedID >> 24) & shadingMask) };
 
 		switch (shadingID)
 		{
@@ -537,7 +538,7 @@ namespace fth
 			return nullptr;
 			break;
 		}
-
+		return nullptr;
 	}
 	
 	bool MeshSystem::FindIntersection(const Ray& ray, MeshSystem::HitResult& outQuery)

@@ -20,9 +20,10 @@ bool IEcheckSpawn(
 	in uint vtxID,
 	in float multiple)
 {
+    bool returnBool = false;
 //all threads will resolve to the same branch
 	if (sphere.currentRadius > sphere.maxRadius)
-		return false;
+        return returnBool;
 
 	float mult = max(1.0f, multiple);
 
@@ -30,7 +31,7 @@ bool IEcheckSpawn(
 	bool isMultiple = mod == 0;
 
 	if (!isMultiple)
-		return false;
+        return returnBool;
 
 	return sphere.prevRadius < sphere.vertexRadius && 
 		                         sphere.vertexRadius < sphere.currentRadius;

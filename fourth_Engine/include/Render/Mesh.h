@@ -22,7 +22,7 @@ namespace fth
 			uint32_t     triangleNum;
 		};
 
-		Mesh();
+		Mesh() noexcept;
 		~Mesh();
 		Mesh(const uint32_t& numVertices);
 		Mesh(const Mesh& otherMesh) = delete;

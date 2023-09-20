@@ -20,9 +20,9 @@ namespace fth
 		{
 			perMesh.resize(srcModel->GetNumMeshes());
 
-			for (auto& perMesh : this->perMesh)
+			for (auto& itPerMesh : this->perMesh)
 			{
-				perMesh.perMaterial.resize(1);
+				itPerMesh.perMaterial.resize(1);
 			}
 		}
 

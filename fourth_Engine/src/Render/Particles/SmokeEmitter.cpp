@@ -31,10 +31,10 @@ namespace fth::particles
 		m_Yspeed(ySpeed),
 		m_particleLifetime(particleLifetime),
 		m_deltaTimeAccumulator(0.0f),
-		m_maxParticles(maxParticles),
+		m_maxParticles(static_cast<uint32_t>(maxParticles)),
 		m_currentAmountParticles(0)
 	{
-		m_particles.reserve(maxParticles);
+		m_particles.reserve(static_cast<uint32_t>(maxParticles));
 	}
 
 	void SmokeEmitter::Update(float deltaTime)

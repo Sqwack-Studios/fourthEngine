@@ -62,7 +62,9 @@ namespace fth
 		}
 		
 
-		DecalInstanceCPU& instance = perMaterialPtr->instances.emplace_back(color, decalToModel, parentID, parentObjectID);
+		perMaterialPtr->instances.emplace_back(color, decalToModel, parentID, parentObjectID);
+		//DecalInstanceCPU& instance = perMaterialPtr->instances.emplace_back(color, decalToModel, parentID, parentObjectID);
+
 		++m_numInstances;
 	}
 

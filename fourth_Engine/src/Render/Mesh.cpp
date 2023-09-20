@@ -24,7 +24,7 @@ namespace fth
 
 	}
 
-	Mesh::Mesh() {}
+	Mesh::Mesh() noexcept{}
 	Mesh::~Mesh()
 	{
 		m_TriangleOctree.clear();

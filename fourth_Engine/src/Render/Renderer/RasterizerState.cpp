@@ -85,7 +85,7 @@ namespace fth
 			rsDsc.CullMode = D3D11_CULL_BACK;
 			rsDsc.FrontCounterClockwise = false;
 			//
-			rsDsc.DepthBias = -1.0f;
+			rsDsc.DepthBias = static_cast<int>(- 1.0f);
 			rsDsc.DepthBiasClamp = 0.0f;
 			rsDsc.SlopeScaledDepthBias = -1.0f;
 			//

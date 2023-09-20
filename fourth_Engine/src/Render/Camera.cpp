@@ -306,7 +306,6 @@ namespace fth
 		void Camera::BuildRayFromScreenPixel(uint16_t targetX, uint16_t targetY, uint16_t bufferWidth, uint16_t bufferHeight, Ray& outRay) const
 		{
 			float half_viewPortHeight{ m_ViewPortHeight / 2.0f };
-			float half_viewPlaneWidth{ m_ViewPortWidth / 2.0f };
 			float dx = m_ViewPortWidth / static_cast<float>(bufferWidth);
 			float dy = m_ViewPortHeight / static_cast<float>(bufferHeight);
 

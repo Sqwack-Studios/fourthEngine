@@ -172,7 +172,7 @@ namespace fth
 		else
 		{
 			//NOT WORKING
-			ExportNonCompressed(src, format, fileName, generateMips);
+			//ExportNonCompressed(src, format, fileName, generateMips);
 		}
 	}
 
@@ -193,7 +193,7 @@ namespace fth
 			   txDsc.depth,
 			   txDsc.arraySize,
 			   txDsc.numMips,
-			   src.isCubemap() ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0,
+			   src.isCubemap() ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0u,
 			   0,
 			   txDsc.format,
 			   static_cast<DirectX::TEX_DIMENSION>(txDsc.dimension) };
@@ -217,10 +217,7 @@ namespace fth
 
 		DirectX::SaveToDDSFile(imagePtr->GetImages(), imagePtr->GetImageCount(), imagePtr->GetMetadata(), DirectX::DDS_FLAGS(0), ConvertUtf8ToWide(fileName).c_str());
 	}
-	void TextureManager::ExportNonCompressed(const Texture& src, FileFormat fmt, const std::string& fileName, bool generateMips)
-	{
 
-	}
 
 
 

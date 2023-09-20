@@ -11,7 +11,7 @@ namespace fth
 	void ShadowMap::Init2D(float inDistance, float inMargin, float inResolution, float inNearPlane)
 	{
 		fth::TextureDsc txdsc;
-		txdsc.height = txdsc.width = static_cast<uint32_t>(inResolution);
+		txdsc.height = txdsc.width = static_cast<uint16_t>(inResolution);
 		txdsc.depth = 0;
 		txdsc.dimension = D3D11_RESOURCE_DIMENSION_TEXTURE2D;
 		txdsc.format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -35,7 +35,7 @@ namespace fth
 	void ShadowMap::InitCubemap(float inDistance, float inMargin, float inResolution, uint16_t numCubes, float inNearPlane)
 	{
 		fth::TextureDsc txdsc;
-		txdsc.height = txdsc.width = static_cast<uint32_t>(inResolution);
+		txdsc.height = txdsc.width = static_cast<uint16_t>(inResolution);
 		txdsc.depth = 0;
 		txdsc.dimension = D3D11_RESOURCE_DIMENSION_TEXTURE2D;
 		txdsc.format = DXGI_FORMAT_R24G8_TYPELESS;

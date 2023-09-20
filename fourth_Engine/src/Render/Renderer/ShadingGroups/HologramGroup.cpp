@@ -19,8 +19,8 @@ namespace fth
 		{
 			perMesh.resize(srcModel->GetNumMeshes());
 
-			for (auto& perMesh : this->perMesh)
-				perMesh.perMaterial.resize(1);
+			for (auto& itPerMesh : this->perMesh)
+				itPerMesh.perMaterial.resize(1);
 		}
 
 		void HologramGroup::Init(uint8_t modelBits, uint8_t materialBits, uint8_t instanceBits)

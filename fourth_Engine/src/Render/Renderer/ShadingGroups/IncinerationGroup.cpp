@@ -82,7 +82,7 @@ namespace fth::shading
 			{"SPHRADIUS", 0, DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,       1, sizeof(math::Matrix) + 2 * sizeof(math::Vector3) + sizeof(uint32_t), D3D11_INPUT_PER_INSTANCE_DATA, 1}
 		};
 
-		m_VS.LoadShader(L"IncinerationGroup_VS.cso", ied, std::size(ied));
+		m_VS.LoadShader(L"IncinerationGroup_VS.cso", ied, static_cast<uint32_t>(std::size(ied)));
 		m_PS.LoadShader(L"IncinerationGroup_PS.cso");
 
 		m_perMeshUniform.CreateGPUBuffer(sizeof(PerMeshGPU), 1, nullptr);

@@ -52,11 +52,13 @@ namespace fth
 		}
 
 		virtual bool attachStream(Assimp::LogStream* pStream,
-			unsigned int severity = Debugging | Err | Warn | Info) {
+			unsigned int severity = Debugging | Err | Warn | Info) 
+		{
 			return false;
 		}
 		virtual bool detachStream(Assimp::LogStream* pStream,
-			unsigned int severity = Debugging | Err | Warn | Info) {
+			unsigned int severity = Debugging | Err | Warn | Info) 
+		{
 			return false;
 		}
 		virtual void OnDebug(const char* msg) {}

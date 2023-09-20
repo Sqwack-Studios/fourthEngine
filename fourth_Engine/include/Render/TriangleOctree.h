@@ -29,8 +29,8 @@ namespace fth
 		const static int PREFFERED_TRIANGLE_COUNT;
 		const static float MAX_STRETCHING_RATIO;
 
-		TriangleOctree();
-		TriangleOctree(TriangleOctree&& otherOctree);
+		TriangleOctree() noexcept;
+		TriangleOctree(TriangleOctree&& otherOctree) noexcept;
 
 
 		void clear() { m_mesh = nullptr; }

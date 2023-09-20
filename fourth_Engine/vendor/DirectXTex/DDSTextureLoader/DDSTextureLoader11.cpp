@@ -2101,7 +2101,7 @@ HRESULT DirectX::LoadDDSFromFileEx(
     UINT height = hdr->height;
     UINT width = hdr->width;
 
-    auto offset = sizeof(uint32_t) + sizeof(DDS_HEADER)
+    uint32_t offset = sizeof(uint32_t) + sizeof(DDS_HEADER)
         + (bDXT10Header ? sizeof(DDS_HEADER_DXT10) : 0u);
 
     if (bDXT10Header)
@@ -2211,6 +2211,7 @@ HRESULT DirectX::LoadDDSFromFileEx(
             return E_FAIL;
         }
         bitSize = bytesRead;
+        return S_OK;
     }
 
    

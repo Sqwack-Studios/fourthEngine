@@ -43,29 +43,31 @@ namespace fth::renderer
 		BloomConfig getBloomConfiguration() const { return m_bloomConfig; }
 		void setBloomConfiguration(BloomConfig config) { m_bloomConfig = config;}
 
-		void resolveBloom_CoD_Siggraph(
-			const ShaderResourceView& src,
-			uint16_t width,
-			uint16_t height,
-			uint8_t numMips,
-			const UnorderedAccessView* targetUAVs,
-			const ShaderResourceView* targetSRVs);
+		//TODO: resolveBloom_CoD_Siggraph
+		//void resolveBloom_CoD_Siggraph(
+		//	const ShaderResourceView& src,
+		//	uint16_t width,
+		//	uint16_t height,
+		//	uint16_t numMips,
+		//	const UnorderedAccessView* targetUAVs,
+		//	const ShaderResourceView* targetSRVs);
 
-		void resolveBloom_downsampleGaussian_upsampleBilinear(
-			const ShaderResourceView& src,
-			uint16_t width,
-			uint16_t height,
-			uint8_t numMips,
-			const UnorderedAccessView* targetUAVs,
-			const ShaderResourceView*  targetSRVs,
-			const UnorderedAccessView* gaussUAVs,
-			const ShaderResourceView*  gaussSRVs);
+	//TODO: BLOOM DOWNSAMPLE GAUSSIAN - UPSAMPLE BILINEAR
+		//void resolveBloom_downsampleGaussian_upsampleBilinear(
+		//	const ShaderResourceView& src,
+		//	uint16_t width,
+		//	uint16_t height,
+		//	uint16_t numMips,
+		//	const UnorderedAccessView* targetUAVs,
+		//	const ShaderResourceView*  targetSRVs,
+		//	const UnorderedAccessView* gaussUAVs,
+		//	const ShaderResourceView*  gaussSRVs);
 
 		void resolveBloom_downsampleCoD_upsampleBilinearGaussian(
 			const ShaderResourceView& src,
 			uint16_t width,
 			uint16_t height,
-			uint8_t numMips,
+			uint16_t numMips,
 			const UnorderedAccessView* targetUAVs,
 			const ShaderResourceView* targetSRVs,
 			const UnorderedAccessView* downsampleUAVs,
@@ -73,23 +75,25 @@ namespace fth::renderer
 			const UnorderedAccessView* gaussUAVs,
 			const ShaderResourceView* gaussSRVs);
 
+
+		//TODO: BLOOM DOWNSAMPLE GAUSSIAN
 		void resolveBloom_downsampleGaussian(
 			const ShaderResourceView& src,
 			uint16_t width,
 			uint16_t height,
-			uint8_t numMips,
+			uint16_t numMips,
 			const UnorderedAccessView* targetUAVs,
 			const ShaderResourceView* targetSRVs,
 			const UnorderedAccessView* gaussUAVs,
 			const ShaderResourceView* gaussSRVs);
 
-
+		//TODO: BLOOM FFT - convolute PointSpreadFunction
 		void resolveBloom_FFT_convPSF(
 			const ShaderResourceView& src,
 			const ShaderResourceView& psf,
 			uint16_t width,
 			uint16_t height,
-			uint8_t numMips
+			uint16_t numMips
 			//
 			);
 		static constexpr float fxaa_qualitySubpixel_default = 0.75f;

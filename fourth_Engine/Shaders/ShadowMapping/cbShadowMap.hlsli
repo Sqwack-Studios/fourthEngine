@@ -81,9 +81,12 @@ float computeVisibilityDirectional(in float3 pos, row_major float4x4 VP, in floa
 	float macroNoL = dot(macroN, L);
 
 	float currentDepth = computeLightDepth(pos, VP, sm_UV);
+
+    float returnValue = 1.0f;
+	
 	//early return if depth is out of frustum
 	if (currentDepth < 0.0f)
-		return 1.0f;
+		return returnValue;
 	
 	//texel size is constant in case of orthogonal projections!
 	SMFrustumPlanes currentFrustumPlane = g_smFrustumPlanes[frustumIndex];
@@ -93,9 +96,9 @@ float computeVisibilityDirectional(in float3 pos, row_major float4x4 VP, in floa
 	currentDepth = computeLightDepth(receiver, VP, sm_UV);
 
 
-	float smoothVisibility = smoothPCF_Directional(shadowMap, sm_UV, currentDepth);
+    returnValue = smoothPCF_Directional(shadowMap, sm_UV, currentDepth);
 
-	return smoothVisibility;
+    return returnValue;
 }
 
 float computeVisibilityPerspective(in float3 pos, row_major float4x4 VP, in float3 macroN, in float3 L, in uint frustumIndex, in Texture2D<float1> shadowMap)
@@ -107,9 +110,11 @@ float computeVisibilityPerspective(in float3 pos, row_major float4x4 VP, in floa
 	//Sample depth at input position. Compute texel size after linearizing depth, add normal offset and sample
 	float currentDepth = computeLightDepth(pos, VP, sm_UV);
 
+    float returnValue = 1.0f;
+
 	if (currentDepth < 0.0f)
 	{
-		return 1.0f;
+		return returnValue;
 	}
 
 	//Turn off normal offset when NoL < 0.0f to avoid light leaks
@@ -125,8 +130,9 @@ float computeVisibilityPerspective(in float3 pos, row_major float4x4 VP, in floa
 	}
 
 	//Add PCF!
-	float visibility = shadowMap.SampleCmp(g_bilinearCmpClamp, sm_UV, currentDepth);
-	return visibility;
+	//visibility
+	returnValue = shadowMap.SampleCmp(g_bilinearCmpClamp, sm_UV, currentDepth);
+	return returnValue;
 	//float visibility = shadowMap.Sample(g_pointClamp, sm_UV);
 	//return currentDepth > visibility;
 }

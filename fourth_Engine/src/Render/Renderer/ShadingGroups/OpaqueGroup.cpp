@@ -86,7 +86,7 @@ namespace fth::shading
 
 
 
-		m_VS.LoadShader(L"OpaqueGroup_VS.cso", ied, std::size(ied));
+		m_VS.LoadShader(L"OpaqueGroup_VS.cso", ied, static_cast<uint32_t>(std::size(ied)));
 		m_PS.LoadShader(L"OpaqueGroup_PS.cso");
 		m_normalDebugGS.LoadShader(L"OpaqueGroup_NormalDebug_GS.cso");
 		m_perMeshUniform.CreateGPUBuffer(sizeof(PerMeshDataGPU), 1, nullptr);

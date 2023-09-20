@@ -9,7 +9,7 @@
 namespace fth::ibl
 {
 
-	void UpdateViewport(uint32_t width, uint32_t height)
+	void UpdateViewport(uint16_t width, uint16_t height)
 	{
 		D3D11_VIEWPORT viewport;
 		viewport.TopLeftX = 0;
@@ -24,7 +24,7 @@ namespace fth::ibl
 	}
 
 	//We could just use outWidth and outHeight, but it feels that the intentions are clearer if you have to specify initial values
-	void ComputeMipLevelSize(uint32_t width, uint32_t height, uint16_t level, uint32_t& outWidth, uint32_t& outHeight)
+	void ComputeMipLevelSize(uint16_t width, uint16_t height, uint16_t level, uint16_t& outWidth, uint16_t& outHeight)
 	{
 		if (level == 0)
 		{
@@ -33,8 +33,8 @@ namespace fth::ibl
 			return;
 		}
 
-		outWidth  =  static_cast<uint32_t>(std::floor(static_cast<float>(width) / 2.0f));
-		outHeight =  static_cast<uint32_t>(std::floor(static_cast<float>(height) / 2.0f));
+		outWidth  =  static_cast<uint16_t>(std::floor(static_cast<float>(width) / 2.0f));
+		outHeight =  static_cast<uint16_t>(std::floor(static_cast<float>(height) / 2.0f));
 		if (outWidth == 1 || outHeight == 1)
 		{
 			return;
@@ -60,7 +60,7 @@ namespace fth::ibl
 //3 : -Y
 //4 : +Z
 //5 : -Z
-	void IBLReflectionCapture::GenerateCubemapDiffuseIrradiance(const Texture& src, std::string_view filePath, uint32_t width, uint32_t height, uint32_t samples, Texture& dst)
+	void IBLReflectionCapture::GenerateCubemapDiffuseIrradiance(const Texture& src, std::string_view filePath, uint16_t width, uint16_t height, uint32_t samples, Texture& dst)
 	{
 		TextureDsc txDsc;
 		txDsc.width = width;
@@ -79,7 +79,7 @@ namespace fth::ibl
 		TextureManager::Get().ExportTexture(dst, TextureManager::FileFormat::BC6H_UF16, std::string(filePath), false);
 	}
 
-	void IBLReflectionCapture::GenerateCubemapSpecularIrradiance(const Texture& src, std::string_view filePath, uint32_t width, uint32_t height, uint32_t samples, Texture& dst)
+	void IBLReflectionCapture::GenerateCubemapSpecularIrradiance(const Texture& src, std::string_view filePath, uint16_t width, uint16_t height, uint32_t samples, Texture& dst)
 	{
 		TextureDsc txDsc;
 		txDsc.width = width;
@@ -99,7 +99,7 @@ namespace fth::ibl
 
 	}
 
-	void IBLReflectionCapture::GenerateGGXSpecularReflectanceLUT(uint32_t width, std::string_view filePath, uint32_t height, uint32_t samples, Texture& dst)
+	void IBLReflectionCapture::GenerateGGXSpecularReflectanceLUT(uint16_t width, std::string_view filePath, uint16_t height, uint32_t samples, Texture& dst)
 	{
 		TextureDsc txDsc;
 		txDsc.width = width;
@@ -140,7 +140,7 @@ namespace fth::ibl
 		TextureManager::Get().ExportTexture(dst, TextureManager::FileFormat::BC5_UNORM, std::string(filePath), false);
 	}
 
-	void IBLReflectionCapture::Capture(const Texture& src, DXGI_FORMAT format, uint32_t width, uint32_t height, uint16_t mips, uint32_t samples, const renderer::PixelShader& targetPS, Texture& dst)
+	void IBLReflectionCapture::Capture(const Texture& src, DXGI_FORMAT format, uint16_t width, uint16_t height, uint16_t mips, uint32_t samples, const renderer::PixelShader& targetPS, Texture& dst)
 	{
 		{
 			m_cubemapGenVS.Bind();
@@ -166,8 +166,8 @@ namespace fth::ibl
 			DX_CALL(s_device->CreateRenderTargetView(dst.GetResource(), &rtvDsc, RTV.reset()));
 
 
-			uint32_t mipWidth;
-			uint32_t mipHeight;
+			uint16_t mipWidth;
+			uint16_t mipHeight;
 			ComputeMipLevelSize(width, height, level, mipWidth, mipHeight);
 			UpdateViewport(mipWidth, mipHeight);
 
