@@ -11,7 +11,7 @@ workspace "Render_Engine"
 		"Dist"
 	}
 
-	startproject "fourth_Engine"
+	startproject "Client"
 
 	defines
 	{
