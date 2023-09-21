@@ -49,30 +49,27 @@ float4 main(VSOut vout) : SV_TARGET
 	float3 L = computeLightDirection(vout.punctualPos, scenePos, relPos, distance);
 
 	float ratio = distance / vout.radius;
-	float4 outColor = BLACK;
 
 	
-	if (ratio < 1.0f)
-	{
-		float3 albedo = g_albedo.Load(uint3(vout.clip.xy, 0));
-		float  metalness = g_roughMetal.Load(uint3(vout.clip.xy, 0)).y;
-		float3 microNormal = unpackOctahedron(g_normals.Load(uint3(vout.clip.xy, 0)).xy);
+	float3 albedo = g_albedo.Load(uint3(vout.clip.xy, 0));
+	float  metalness = g_roughMetal.Load(uint3(vout.clip.xy, 0)).y;
+	float3 microNormal = unpackOctahedron(g_normals.Load(uint3(vout.clip.xy, 0)).xy);
 
-		float3 diffuseColor = (1.0f - metalness) * albedo;
-		float3 F0 = fresnel0(albedo, metalness);
+	float3 diffuseColor = (1.0f - metalness) * albedo;
+	float3 F0 = fresnel0(albedo, metalness);
 
-		float NoL = max(0.0f, dot(L, microNormal));
+	float NoL = max(0.0f, dot(L, microNormal));
 
-		float distanceSq = distance * distance;
-		float sizeSq = vout.size * vout.size;
-		float radiusSq = vout.radius * vout.radius;
-		float cosSolidAngle;
-		float solidAngle = computeSphereSolidAngle(distanceSq, sizeSq, cosSolidAngle);
-		//we want at distance = radius to have intensity ~0
-		float3 irradiance = float3(0.01f, 0.01f, 0.01f);
-		float3 radiance = radianceFromIrradiance(irradiance, radiusSq, sizeSq) * vout.emission.rgb;
+	float distanceSq = distance * distance;
+	float sizeSq = vout.size * vout.size;
+	float radiusSq = vout.radius * vout.radius;
+	float cosSolidAngle;
+	float solidAngle = computeSphereSolidAngle(distanceSq, sizeSq, cosSolidAngle);
+	//we want at distance = radius to have intensity ~0
+	float3 irradiance = float3(0.01f, 0.01f, 0.01f);
+	float3 radiance = radianceFromIrradiance(irradiance, radiusSq, sizeSq) * vout.emission.rgb;
 
-		outColor.rgb = radiance * diffuseColor * _1DIVPI * (1.0f - F0) * NoL * solidAngle;
-	}
+    float invRatio = 1.0f - ratio;
+    float4 outColor = float4(radiance * diffuseColor * _1DIVPI * (1.0f - F0) * NoL * solidAngle * smoothstep(0.0f, 1.0f, invRatio), 1.0f);
 	return outColor;
 }

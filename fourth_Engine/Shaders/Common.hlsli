@@ -14,6 +14,9 @@ static const float _1DIV4PI   = 0.079577475f;
 static const float _PIDIV2    = 1.570796327f;
 static const float _PIDIV4    = 0.785398163f;
 
+static const float SQRT2      = 1.414213562f;
+static const float SQRT2DIV2  = 0.707106781f;
+
 static const float  EULER      = 2.718281828f;
 static const float  _1DIVEULER = 0.367879441f;
 

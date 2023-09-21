@@ -1,5 +1,6 @@
 #include "gpuParticles.hlsli"
 #include "../cbPerView.hlsli"
+#include "../Common.hlsli"
 
 #ifdef PARTICLES_LIGHTNING_SPHERES
 struct VSIn
@@ -88,8 +89,8 @@ VSOut main(VSIn vin)
 
 	VSOut vout;
 	vout.clip = clip;
-	vout.radius = scale;
-	vout.size = size;
+    vout.radius = scale;
+	vout.size = size ;
 	vout.punctualPos = punctualPos;
 	vout.emission = particle.emission;
 

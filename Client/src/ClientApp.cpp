@@ -674,7 +674,7 @@ void ClientApp::CreateShowcaseScene()
 
 	//moon luminance : ~5000 cd/sr. moon w ~ 6.418e-5
 	math::Vector3 dir{ 1.0f, -1.0f, 1.0f };
-	LightSystem::Get().AddDirectionalSphereLight(12000.0f * DirectX::Colors::White.v,  { 1.0f, -1.0f, 1.0f }, 6.418e-5f, Handle<math::Matrix>::Invalid());
+	LightSystem::Get().AddDirectionalSphereLight(6000.0f * DirectX::Colors::White.v,  { 1.0f, -1.0f, 1.0f }, 6.418e-5f, Handle<math::Matrix>::Invalid());
 
 	//1200 lumens (luminous flux, or phi light bulbs)
 	{
@@ -686,9 +686,9 @@ void ClientApp::CreateShowcaseScene()
 		math::Vector3 position{ math::Vector3::Zero };
 
 		//Wrap this process into a Higher level light function
-		constexpr uint8_t NUM_POINT{ 1 };
+		constexpr uint8_t NUM_POINT{ 2 };
 		shading::EmissionOnly::InstanceData emissiveInstance[NUM_POINT];
-		const math::Vector3 radiance[NUM_POINT] = { 5000.0f * DirectX::Colors::White.v};
+		const math::Vector3 radiance[NUM_POINT] = { 2550.0f * DirectX::Colors::White.v, 1250.0f * DirectX::Colors::Fuchsia.v};
 
 		Handle<shading::EmissionOnly::PerModel> emissionModelHandle = MeshSystem::Get().addEmissionOnlyModel(ModelManager::GetUnitSphereSmooth());
 		shading::EmissionOnly::Material emissiveMat[10] = {};
@@ -696,7 +696,7 @@ void ClientApp::CreateShowcaseScene()
 		MeshSystem::Get().addEmissionOnlyMaterial(emissiveMat, emissionModelHandle, matHandles);
 
 
-		transform.position = { -5.0f, 5.0f, 0.0f };
+		transform.position = { 0.0f, 7.5f, 0.0f };
 		emissiveID = TransformSystem::Get().AddTransform(transform);
 
 		LightSystem::Get().AddPointSphereLight(radiance[0], radius, position, emissiveID);
@@ -704,13 +704,13 @@ void ClientApp::CreateShowcaseScene()
 		emissiveInstance[0].emissionColor = radiance[0];
 		emissiveInstance[0].handle_modelToWorld = emissiveID;
 
-		transform.position = {  5.0f, 5.0f, 0.0f };
+		transform.position = { 0.0f, 7.5f, 15.0f };
 		emissiveID = TransformSystem::Get().AddTransform(transform);
 
-		//LightSystem::Get().AddPointSphereLight(radiance[1], radius, position, emissiveID);
+		LightSystem::Get().AddPointSphereLight(radiance[1], radius, position, emissiveID);
 
-		//emissiveInstance[1].emissionColor = radiance[1];
-		//emissiveInstance[1].handle_modelToWorld = emissiveID;
+		emissiveInstance[1].emissionColor = radiance[1];
+		emissiveInstance[1].handle_modelToWorld = emissiveID;
 
 
 		MeshSystem::Get().addEmissionOnlyInstances(emissionModelHandle, matHandles, emissiveInstance, NUM_POINT, 1);
@@ -718,7 +718,7 @@ void ClientApp::CreateShowcaseScene()
 
 
 
-		constexpr math::Vector3 emitterPos{ 0.0f, 0.0f, 0.0f };
+		constexpr math::Vector3 emitterPos{ 0.0f, 7.5f, 15.0f };
 		const math::Color emitterTint{ DirectX::Colors::Black.v };
 		constexpr float spawnRadius{ 0.01f };
 		//Handle<math::Matrix> emitterParentID{ emissiveID };
@@ -726,9 +726,9 @@ void ClientApp::CreateShowcaseScene()
 
 		constexpr math::Vector2 emitterXSpeedRange{ -0.25f, 0.25f };
 		constexpr math::Vector2 emitterZSpeedRange{ -0.25f, 0.25f };
-		constexpr math::Vector2 emitterInitialSize{ 1.0f, 1.0f };
+		constexpr math::Vector2 emitterInitialSize{ 10.0f, 10.0f };
 		constexpr math::Vector2 emitterRotationRange{ 0.0f, DirectX::XM_PIDIV2 };
-		constexpr float emitterSizeIncreaseRate{ 2.5f };
+		constexpr float emitterSizeIncreaseRate{ 1.0f };
 		constexpr float emitterYspeed{ 0.0f };
 		constexpr float emitterParticleLifetime{ 0.5f };
 		constexpr float emitterMaxParticles{ 1.0f };
@@ -745,7 +745,7 @@ void ClientApp::CreateShowcaseScene()
 	m_flashlightID = LightSystem::Get().AddSpotSphereLight(
 		200.0f * DirectX::Colors::White.v,
 		0.25f,
-		{ 0.0f, 0.0f, 7.0f },
+		{ 0.0f, 0.0f, 0.0f },
 		math::Vector3::Forward, 
 		DirectX::XM_PIDIV4 * 0.5f, 
 		DirectX::XM_PIDIV2 * 0.5f,
@@ -787,7 +787,7 @@ void ClientApp::CreateShowcaseScene()
 
 	//Build Quad floors
 	Handle<shading::OpaqueGroup::PerModel> opaqueModelHandle{ MeshSystem::Get().addOpaqueModel(ModelManager::GetQuad()) };
-	shading::OpaqueGroup::Material opaqueQuadMat[2];
+	shading::OpaqueGroup::Material opaqueQuadMat[5];
 	opaqueQuadMat[0] = shading::OpaqueGroup::Material(
 		TextureManager::Get().FindTexture("Mud_BaseColor.dds"),
 		TextureManager::Get().FindTexture("Mud_Normal.dds"),
@@ -805,36 +805,184 @@ void ClientApp::CreateShowcaseScene()
 		0,
 		1.0f, 0.0f);
 
-	Handle<shading::OpaqueGroup::Material> opaqueQuadMatHandles[2];
+	opaqueQuadMat[2] = shading::OpaqueGroup::Material(
+		TextureManager::Get().FindTexture("yellowContainer_BaseColor.dds"),
+		TextureManager::Get().FindTexture("yellowContainer_Normal.dds"),
+		TextureManager::Get().FindTexture("yellowContainer_Roughness.dds"),
+		nullptr,
+		shading::OpaqueGroup::BUILD_BLUE_CHANNEL,
+		1.0f, 0.0f);
+
+	opaqueQuadMat[3] = shading::OpaqueGroup::Material(
+		TextureManager::Get().FindTexture("redCrystal_BaseColor.dds"),
+		TextureManager::Get().FindTexture("redCrystal_Normal.dds"),
+		TextureManager::Get().FindTexture("redCrystal_Roughness.dds"),
+		nullptr,
+		shading::OpaqueGroup::BUILD_BLUE_CHANNEL,
+		1.0f, 0.0f);
+
+	opaqueQuadMat[4] = shading::OpaqueGroup::Material(
+		TextureManager::Get().FindTexture("rockyGround_BaseColor.dds"),
+		TextureManager::Get().FindTexture("rockyGround_Normal.dds"),
+		TextureManager::Get().FindTexture("rockyGround_Roughness.dds"),
+		nullptr,
+		shading::OpaqueGroup::BUILD_BLUE_CHANNEL,
+		1.0f, 0.0f);
+	Handle<shading::OpaqueGroup::Material> opaqueQuadMatHandles[5];
 
 	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[0], opaqueModelHandle, &opaqueQuadMatHandles[0]);
 	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[1], opaqueModelHandle, &opaqueQuadMatHandles[1]);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[2], opaqueModelHandle, &opaqueQuadMatHandles[2]);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[3], opaqueModelHandle, &opaqueQuadMatHandles[3]);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[4], opaqueModelHandle, &opaqueQuadMatHandles[4]);
 
-	shading::OpaqueGroup::InstanceData instanceData[4];
-	math::Transform transform;
-	transform.position = math::Vector3::Zero;
-	transform.scale = math::Vector3::One * 20.0f;
-	transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Right, DirectX::XM_PIDIV2);
-	instanceData[0].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 
-	MeshSystem::Get().addOpaqueInstances(opaqueModelHandle, opaqueQuadMatHandles, &instanceData[0], 1, 1);
+	Handle<shading::OpaqueGroup::PerModel> opaqueCubeHandle{ MeshSystem::Get().addOpaqueModel(ModelManager::GetUnitCube()) };
+	Handle<shading::OpaqueGroup::Material> opaqueCubeMatHandles[5];
 
-	transform.position.y = 20.0f;
-	transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Right, -1.0f * DirectX::XM_PIDIV2);
-	instanceData[1].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[0], opaqueCubeHandle, &opaqueCubeMatHandles[0]);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[1], opaqueCubeHandle, &opaqueCubeMatHandles[1]);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[2], opaqueCubeHandle, &opaqueCubeMatHandles[2]);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[3], opaqueCubeHandle, &opaqueCubeMatHandles[3]);
+	MeshSystem::Get().addOpaqueMaterial(&opaqueQuadMat[4], opaqueCubeHandle, &opaqueCubeMatHandles[4]);
 
-	transform.position.x = -10.0f;
-	transform.position.y = 10.0f;
-	transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, -1.0f * DirectX::XM_PIDIV2);
-	instanceData[2].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 
-	transform.position.x = 10.0f;
-	transform.position.y = 10.0f;
-	transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, 1.0f * DirectX::XM_PIDIV2);
-	instanceData[3].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
-	MeshSystem::Get().addOpaqueInstances(opaqueModelHandle, &opaqueQuadMatHandles[1], &instanceData[1], 3, 1);
+	//Instantiate encased UV test
+	{
+		shading::OpaqueGroup::InstanceData instanceData[11];
+		math::Transform transform;
+		transform.position = math::Vector3::Zero;
+		transform.scale = math::Vector3::One * 15.0f;
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Right, DirectX::XM_PIDIV2);
+		instanceData[0].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 
-	m_attatchedFlashlight = false;
+
+		transform.position.y = 15.0f;
+		instanceData[1].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Right, -1.0f * DirectX::XM_PIDIV2);
+		instanceData[2].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.position.x = -7.5f;
+		transform.position.y =  7.5f;
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, -1.0f * DirectX::XM_PIDIV2);
+		instanceData[3].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, DirectX::XM_PIDIV2);
+		instanceData[4].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.position.x = 7.5f;;
+		transform.position.y = 7.5f;;
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, 1.0f * DirectX::XM_PIDIV2);
+		instanceData[5].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, -1.0f * DirectX::XM_PIDIV2);
+		instanceData[6].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.position.x = 0.0f;
+		transform.position.z = 7.5f;
+		transform.position.y = 7.5f;
+		transform.rotation = math::Quaternion::Identity;
+		instanceData[7].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, DirectX::XM_PI);
+		instanceData[8].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.position.z = -7.5f;
+		transform.position.y =  7.5f;
+		instanceData[9].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		transform.rotation = math::Quaternion::Identity;
+		instanceData[10].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		MeshSystem::Get().addOpaqueInstances(opaqueModelHandle, &opaqueQuadMatHandles[1], &instanceData[0], 11, 1);
+
+		constexpr uint8_t NUM_CUBES{ 4 };//4 rows of cubes, each cube with its own material
+		transform = math::Transform::Initial;
+
+		transform.position.y =  9.25f;
+		transform.position.x = -3.75f;
+		transform.position.z = 0.5f;
+		transform.scale = math::Vector3::One * 0.5f;
+		for (uint32_t i = 0; i < NUM_CUBES; ++i)
+		{
+			transform.position.z += 1.0f * i;
+			transform.scale *= 1.30f;
+			float rotation = i * 0.25f;
+			transform.rotation = math::Quaternion::CreateFromYawPitchRoll(rotation, rotation, rotation);
+			instanceData[i].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+		}
+
+		MeshSystem::Get().addOpaqueInstances(opaqueCubeHandle, &opaqueCubeMatHandles[1], &instanceData[0], NUM_CUBES, 1);
+
+		transform.position.x = 3.75f;
+		transform.scale = math::Vector3::One * 0.5f;
+		transform.position.z = 0.5f;
+
+		for (uint32_t i = 0; i < NUM_CUBES; ++i)
+		{
+			transform.position.z += 1.0f * i;
+			transform.scale *= 1.30f;
+			float rotation = i * 0.25f;
+			transform.rotation = math::Quaternion::CreateFromYawPitchRoll(rotation, rotation, rotation);
+			instanceData[i].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+		}
+
+		MeshSystem::Get().addOpaqueInstances(opaqueCubeHandle, &opaqueCubeMatHandles[2], &instanceData[0], NUM_CUBES, 1);
+
+		transform.position.x = 3.75f;
+		transform.scale = math::Vector3::One * 0.5f;
+		transform.position.z = -0.5f;
+
+		for (uint32_t i = 0; i < NUM_CUBES; ++i)
+		{
+			transform.position.z -= 1.0f * i;
+			transform.scale *= 1.30f;
+			float rotation = i * 0.25f;
+			transform.rotation = math::Quaternion::CreateFromYawPitchRoll(rotation, rotation, rotation);
+			instanceData[i].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+		}
+
+		MeshSystem::Get().addOpaqueInstances(opaqueCubeHandle, &opaqueCubeMatHandles[3], &instanceData[0], NUM_CUBES, 1);
+
+		transform.position.x = -3.75f;
+		transform.scale = math::Vector3::One * 0.5f;
+		transform.position.z = -0.5f;
+
+		for (uint32_t i = 0; i < NUM_CUBES; ++i)
+		{
+			transform.position.z -= 1.0f * i;
+			transform.scale *= 1.30f;
+			float rotation = i * 0.25f;
+			transform.rotation = math::Quaternion::CreateFromYawPitchRoll(rotation, rotation, rotation);
+			instanceData[i].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+		}
+
+		MeshSystem::Get().addOpaqueInstances(opaqueCubeHandle, &opaqueCubeMatHandles[4], &instanceData[0], NUM_CUBES, 1);
+	}
+
+
+	{
+		shading::OpaqueGroup::InstanceData instanceData[3];
+		math::Transform transform{ math::Transform::Initial };
+		transform.position = { 0.0f, 0.0f, 15.0f };
+		transform.scale *= 15.0f;
+		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Right, DirectX::XM_PIDIV2);
+		instanceData[0].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		MeshSystem::Get().addOpaqueInstances(opaqueModelHandle, &opaqueQuadMatHandles[0], &instanceData[0], 1, 1);
+
+		transform.position = { -15.0f, 0.0f, 15.0f };
+		instanceData[1].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		MeshSystem::Get().addOpaqueInstances(opaqueModelHandle, &opaqueQuadMatHandles[2], &instanceData[1], 1, 1);
+
+		transform.position = { 15.0f, 0.0f, 15.0f };
+		instanceData[2].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
+
+		MeshSystem::Get().addOpaqueInstances(opaqueModelHandle, &opaqueQuadMatHandles[3], &instanceData[2], 1, 1);
+	}
+	m_attatchedFlashlight = true;
 
 	if (m_attatchedFlashlight)
 	{
