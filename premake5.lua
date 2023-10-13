@@ -29,9 +29,6 @@ defineLightViewSpace = "CAMERA_CENTER_WS"
 defineParticlesLightning = "PARTICLES_LIGHTNING_SPHERES"
 defineParticlesLightning = "PARTICLES_LIGHTNING_BILLBOARDS"
 
-defineFFT_SHARED_MODEL_LOOP_CHANNELS = "FFT_ShMem_LOOP_CHANNELS = 0"
-defineFFT_SHARED_MODEL_COMPUTE_RGB   = "FFT_ShMem_COMPUTE_RGB = 1"
-defineFFT_SHARED_MODEL               = "FFT_SHARED_MODEL = 0"
 
 
 

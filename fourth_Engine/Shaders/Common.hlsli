@@ -6,20 +6,18 @@
 #ifndef _COMMON_HLSL
 #define _COMMON_HLSL
 
-static const float _PI        = 3.141592654f;
-static const float _2PI       = 6.283185307f;
-static const float _1DIVPI    = 0.318309886f;
-static const float _1DIV2PI   = 0.159154943f;
-static const float _1DIV4PI   = 0.079577475f;
-static const float _PIDIV2    = 1.570796327f;
-static const float _PIDIV4    = 0.785398163f;
-
-static const float SQRT2      = 1.414213562f;
-static const float SQRT2DIV2  = 0.707106781f;
-
-static const float  EULER      = 2.718281828f;
-static const float  _1DIVEULER = 0.367879441f;
-
+#define PI         3.141592654f
+#define TWO_PI     6.283185307f
+#define _1DIVPI    0.318309886f
+#define _1DIV2PI   0.159154943f
+#define _1DIV4PI   0.079577475f
+#define PIDIV2     1.570796327f
+#define PIDIV4     0.785398163f
+#define SQRT2      1.414213562f
+#define SQRT2DIV2  0.707106781f
+#define EULER      2.718281828f
+#define _1DIVEULER 0.367879441f
+ 
 static const float EPSILON    = 0.01f;
 // Neubelt and Pettineo 2013, "Crafting a Next-gen Material Pipeline for The Order: 1886"
 static const float MIN_NoV_CLAMP = 1e-4f;

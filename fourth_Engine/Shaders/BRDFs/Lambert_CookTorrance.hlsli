@@ -56,7 +56,7 @@ float smith(float rough4, float NoV, float NoL)
 float ggx(float rough4, float NoH)
 {
 	float denom = NoH * NoH * (rough4 - 1.0) + 1.0;
-	denom = _PI * denom * denom;
+	denom = PI * denom * denom;
 	return rough4 / denom;
 }
 

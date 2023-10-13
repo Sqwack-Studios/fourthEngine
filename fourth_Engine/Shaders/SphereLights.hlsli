@@ -61,7 +61,7 @@ float computeSphereSolidAngle(in float squareDistance, in float squareRadius, ou
 
 	cosSolidAngle = sqrt(1.0f - ratio);
 
-	return _2PI * (1.0f - cosSolidAngle);
+	return TWO_PI * (1.0f - cosSolidAngle);
 }
 
 float computeAngleAttenuation(in float3 lightDirection, in float3 lightOrientation, in float angleScale, in float angleOffset)

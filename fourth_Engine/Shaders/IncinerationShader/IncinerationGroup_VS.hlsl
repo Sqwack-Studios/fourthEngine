@@ -140,7 +140,7 @@ VSOut main( VSIn vin, uint vtxID : SV_VERTEXID )
 #else
 			particle.position = worldPos;
 #endif
-			particle.rotation = _2PI * randomVanDeCorput(vtxID);
+			particle.rotation = TWO_PI * randomVanDeCorput(vtxID);
 			particle.speed = initialSpeed * normal;
 			particle.timeLeft = initialLifetime;
 			particle.size = initialSize;

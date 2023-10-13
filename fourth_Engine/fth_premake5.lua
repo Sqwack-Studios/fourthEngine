@@ -73,9 +73,8 @@ project "fourth_Engine"
 
 	    shaderdefines(defineLightViewSpace)
 		shaderdefines(defineParticlesLightning)
-		shaderdefines(defineFFT_SHARED_MODEL_LOOP_CHANNELS)
-		shaderdefines(defineFFT_SHARED_MODEL_COMPUTE_RGB)
-		shaderdefines(defineFFT_SHARED_MODEL)
+	
+
 
 		shaderassembler("AssemblyCode")
 		local shader_dir = "../".."bin/" .. outputdir .. "/fourth_Engine/Shaders/"

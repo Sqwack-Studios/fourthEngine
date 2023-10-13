@@ -9,7 +9,7 @@ static const float uniformSamplingPDF = _1DIV2PI;
 float3 randomHemisphere(out float NdotV, float i, float N)
 {
 	const float GOLDEN_RATIO = (1.0 + sqrt(5.0)) / 2.0;
-	float theta = 2.0 * _PI * i / GOLDEN_RATIO;
+	float theta = 2.0 * PI * i / GOLDEN_RATIO;
 	float phiCos = NdotV = 1.0 - (i + 0.5) / N;
 	float phiSin = sqrt(1.0 - phiCos * phiCos);
 	float thetaCos, thetaSin;
@@ -56,7 +56,7 @@ float2 randomHammersley(float i, float N)
 // GGX importance sampling, returns microsurface normal (half-vector)
 float3 randomGGX(float2 random, float rough2)
 {
-	float phi = 2.0 * _PI * random.x;
+	float phi = 2.0 * PI * random.x;
 	float cosTheta = sqrt((1.0 - random.y) / (1.0 + (rough2 - 1.0) * random.y));
 	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
 
@@ -91,7 +91,7 @@ float uniformSampleSize(in float numSamples)
 float importanceGGXSampleSize(in float numSamples, in float NoH, in float roughness2)
 {
 	float num = 4.0f;
-	float den = _2PI * ggx(roughness2, NoH) * numSamples;
+	float den = TWO_PI * ggx(roughness2, NoH) * numSamples;
 
 	return num / den;
 }
