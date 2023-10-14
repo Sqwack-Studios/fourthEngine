@@ -16,7 +16,7 @@ Complex complexConjugate(in Complex a)
 }
 
 
-groupshared float sharedfft[2 * SIGNAL_LENGTH];
+
 
 //FWD FFT; input a HDR RGBA_16 texture 
 //FFT outputs float3 Real and Imaginary part, which are organized as two textures:
@@ -59,7 +59,54 @@ uint expand(in uint idxL, in uint N1, in uint N2)
 {
     return (idxL / N1) * N1 * N2 + (idxL % N1);
 }
+#if 1
+groupshared float sharedReal[SIGNAL_LENGTH];
+groupshared float sharedImag[SIGNAL_LENGTH];
 
+void copyBufferToShared(in uint head, in uint stride, inout Complex buffer[RADIX])
+{
+    //If I'm not wrong, multiplication is more expensive than addition
+
+    [unroll]
+    for (uint r_R = 0, sharedIdx_R = head; r < RADIX; ++r, sharedIdx += stride)
+    {
+        sharedReal[sharedIdx_R] = buffer[r_R].x;
+    }
+
+    [unroll]
+    for (uint r_I = 0, sharedIdx_I = head; r < RADIX; ++r, sharedIdx += stride)
+    {
+        sharedImag[sharedIdx_I] = buffer[r_I].y;
+    }
+
+}
+
+void copySharedToBuffer(in uint head, in uint stride, inout Complex buffer[RADIX])
+{
+    [unroll]
+    for(uint r_R = 0, sharedIdx_R = head; r_R < RADIX; ++r, sharedIdx_R += stride)
+    {
+        buffer[r_R].x = sharedReal[sharedIdx_R];
+    }
+    
+    [unroll]
+    for (uint r_I = 0, sharedIdx_I = head; r_I < RADIX; ++r, sharedIdx_I += stride)
+    {
+        buffer[r_I].y = sharedReal[sharedIdx_I];
+    }
+
+}
+
+void syncronizeData(in uint bufferAHead, in uint bufferAStride, in uint bufferBHead, in uint bufferBStride, inout Complex threadBuffer[RADIX])
+{
+    copyBufferToShared(bufferAHead, bufferAStride, threadBuffer);
+    
+    GroupMemoryBarrierWithGroupSync();
+    
+    copySharedToBuffer(bufferBHead, bufferBStride, threadBuffer);
+}
+
+#endif
 //https://developer.nvidia.com/blog/using-shared-memory-cuda-cc/
 //To minimize bank conflicts, it is important to understand how memory addresses map to memory banks. 
 //Shared memory banks are organized such that successive 32-bit words are assigned to successive banks and the bandwidth is 32 bits per bank per clock cycle. 
@@ -70,18 +117,33 @@ uint expand(in uint idxL, in uint N1, in uint N2)
 //For devices of compute capability 2.0, the warp size is 32 threads and the number of banks is also 32. 
 //A shared memory request for a warp is not split as with devices of compute capability 1.x, 
 //meaning that bank conflicts can occur between threads in the first half of a warp and threads in the second half of the same warp.
+//I have no idea how to solve this right now, I've tried to simulate index computation per workgroup(64 threads) but I dont have this behaviour.
+#if 0
+
+groupshared float sharedFFT[2u *  SIGNAL_LENGTH]
 #define LDS_BANKS 32
 
-void exchangeBankConflictOptimized()
-{
-    
-}
+//sends local thread register data to groupshared memory, and loads new set of data for the next step
 
-void exchange(in uint stride, in uint idxD, in uint incD, in uint idxS, in uint incS, inout Complex threadBuffer[RADIX])
+void syncronizeData(in uint bufferAHead, in uint bufferAStride, in uint bufferBHead, in uint bufferBStride, inout Complex threadBuffer[RADIX])
 {
-    uint shReIdx = 0;
-    uint shImIdx = shReIdx + WORKGROUP_SIZE_X * RADIX;
+//because we are computing the FFT per workgroup, threadId is localThreadId, and we don't care about which scanline this 
+//threadgroup was asigned to.
+//uint shReIdx = 0;
+//uint shImIdx = shReIdx + WORKGROUP_SIZE_X * RADIX;
     
+//Based on:
+// http://mc.stanford.edu/cgi-bin/images/7/75/SC08_FFT_on_GPUs.pdf
+//"Padding requires extra shared memory. To reduce the amount of shared memory by a factor of 2,
+//it is possible to exchange only one component at a time.
+//This requires 3 synchronizations instead of 1, but can result in a net gain in performance because
+//it allows more in-fligh threads.
+//Because the local buffer stride depends of the subsequence length (stride = Ns), when Ns < 32(NUM_BANKS) there are bank conflicts.
+    
+    const uint bankStride = (bufferAHead < LDS_BANKS) ? bufferAHead : 0;
+    //First let's exchange Real part of the data
+    
+    //Exchange Imaginary part of the data
     
     GroupMemoryBarrierWithGroupSync();
     
@@ -108,6 +170,7 @@ void exchange(in uint stride, in uint idxD, in uint incD, in uint idxS, in uint 
     }
 
 }
+#endif
 
 void FFT_Radix_2(inout Complex threadBuffer[RADIX])
 {
@@ -148,12 +211,14 @@ void twiddle(in const bool isForward, inout Complex threadBuffer[RADIX], in cons
 
 }
 
-//Real-2-Complex
-void stockhamShared_Forward(in const uint N, in const uint threadIdx, in const bool isForward, inout Complex threadBuffer[RADIX])
+//Complex-2-complex
+void stockhamShared(in const uint N, in const uint threadIdx, in const bool isForward, inout Complex threadBuffer[RADIX])
 {
     const uint numGroups = N / RADIX;
-    const uint idxS = expand(threadIdx, numGroups, RADIX); // -> this number is always equal to threadIdx because (thread / numGroups) = 0, and %(thread / cols) = thread. thread [0, NUM_GROUPS - 1]
+    const uint sharedBufferHead = threadIdx; // -> this number is always equal to threadIdx because (thread / numGroups) = 0, and %(thread / cols) = thread. thread [0, NUM_GROUPS - 1]
 
+    //TODO: optimizations can be made for the initial and last case, avoiding extra loops and simple arithmetic
+    
     [unroll]
     for (uint Ns = 1; Ns < N; Ns << RADIX_LOG)
     {
@@ -161,9 +226,9 @@ void stockhamShared_Forward(in const uint N, in const uint threadIdx, in const b
 
         FFT_Radix_R(isForward, threadBuffer);
 
-        uint idxD = expand(threadIdx, Ns, RADIX);
+        uint localBufferHead = expand(threadIdx, Ns, RADIX);
         
-        exchange(1, idxD, Ns, idxS, numGroups, threadBuffer);
+        exchange(1, localBufferHead, Ns, sharedBufferHead, numGroups, threadBuffer);
     }
 
 }
