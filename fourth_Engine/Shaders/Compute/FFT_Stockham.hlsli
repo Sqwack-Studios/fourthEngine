@@ -68,13 +68,13 @@ void copyBufferToShared(in uint head, in uint stride, inout Complex buffer[RADIX
     //If I'm not wrong, multiplication is more expensive than addition
 
     [unroll]
-    for (uint r_R = 0, sharedIdx_R = head; r < RADIX; ++r, sharedIdx += stride)
+    for (uint r_R = 0, sharedIdx_R = head; r_R < RADIX; ++r_R, sharedIdx_R += stride)
     {
         sharedReal[sharedIdx_R] = buffer[r_R].x;
     }
 
     [unroll]
-    for (uint r_I = 0, sharedIdx_I = head; r < RADIX; ++r, sharedIdx += stride)
+    for (uint r_I = 0, sharedIdx_I = head; r_I < RADIX; ++r_I, sharedIdx_I += stride)
     {
         sharedImag[sharedIdx_I] = buffer[r_I].y;
     }
@@ -84,13 +84,13 @@ void copyBufferToShared(in uint head, in uint stride, inout Complex buffer[RADIX
 void copySharedToBuffer(in uint head, in uint stride, inout Complex buffer[RADIX])
 {
     [unroll]
-    for(uint r_R = 0, sharedIdx_R = head; r_R < RADIX; ++r, sharedIdx_R += stride)
+    for(uint r_R = 0, sharedIdx_R = head; r_R < RADIX; ++r_R, sharedIdx_R += stride)
     {
         buffer[r_R].x = sharedReal[sharedIdx_R];
     }
     
     [unroll]
-    for (uint r_I = 0, sharedIdx_I = head; r_I < RADIX; ++r, sharedIdx_I += stride)
+    for (uint r_I = 0, sharedIdx_I = head; r_I < RADIX; ++r_I, sharedIdx_I += stride)
     {
         buffer[r_I].y = sharedReal[sharedIdx_I];
     }
@@ -228,7 +228,7 @@ void stockhamShared(in const uint N, in const uint threadIdx, in const bool isFo
 
         uint localBufferHead = expand(threadIdx, Ns, RADIX);
         
-        exchange(1, localBufferHead, Ns, sharedBufferHead, numGroups, threadBuffer);
+        syncronizeData(localBufferHead, Ns, sharedBufferHead, numGroups, threadBuffer);
     }
 
 }
