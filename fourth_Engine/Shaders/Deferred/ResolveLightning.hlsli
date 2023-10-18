@@ -51,7 +51,9 @@ void addEnvironmentReflection(in View v, in Surface s, in EnvironmentalIBL ibl, 
 void computeMRP(in Light light, in float3 normal, in View v, inout float NoL, out float NoH, out float VoH, out float HoL)
 {
 	float3 _L, _H;
-	float _NoL = NoL, _NoH, _VoH, _HoL;
+    float _NoL, _NoH, _VoH, _HoL;
+    _NoL = NoL;
+    _NoH = _VoH = _HoL = 0.0f;
 
 	if (g_MRP_Flags == KARIS)
 	{

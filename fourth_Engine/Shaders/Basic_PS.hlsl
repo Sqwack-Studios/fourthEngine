@@ -200,8 +200,11 @@ float4 plasmaParticles(PSInput input)
 }
 
 
+
 float4 main(PSInput input) : SV_Target0
 {
+
+
 #ifdef PLASMA_PARTICLES
 	return plasmaParticles(input);
 #endif

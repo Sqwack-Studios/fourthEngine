@@ -86,7 +86,15 @@ private:
 	std::vector<fth::Handle<fth::shading::OpaqueGroup::Material> >      opaqueMaterialHandles[2];
 	std::vector<fth::Handle<fth::shading::DissolutionGroup::Material> > dissolutionMaterialHandles[2];
 
-
+	std::shared_ptr<fth::Texture>      m_aperture;
+	fth::Texture      m_aperturefft0;
+	fth::Texture      m_aperturefft1;
+	fth::Texture      m_intermediatefft0;
+	fth::Texture      m_intermediatefft1;
+	fth::renderer::UnorderedAccessView m_aperturefft0UAV;
+	fth::renderer::UnorderedAccessView m_aperturefft1UAV;
+	fth::renderer::UnorderedAccessView m_intermediatefft0UAV;
+	fth::renderer::UnorderedAccessView m_intermediatefft1UAV;
 };
 
 

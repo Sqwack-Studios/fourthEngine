@@ -126,7 +126,7 @@ namespace fth::renderer
 		void createTextureUAV(const DxResPtr<ID3D11Resource>& res, DXGI_FORMAT fmt, D3D11_RESOURCE_DIMENSION dimension, uint16_t targetMip, uint16_t arraySlice = 0, uint16_t arraySize = 1);
 		void BindCS(uint16_t slot) const;
 		static void BindCS(UnorderedAccessView* const srv, uint16_t numViews, uint16_t startSlot);
-		static void ClearCS(uint16_t numViews);
+		static void ClearCS(uint16_t slot);
 	};
 
 }

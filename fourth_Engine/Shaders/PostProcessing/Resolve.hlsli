@@ -35,7 +35,7 @@ float3 adjustExposure(float3 color, float EV100)
 
 float3 correctGamma(float3 color, float gamma)
 {
-	return pow(color, 1.0f / gamma);
+    return pow(abs(color), 1.0f / gamma);
 }
 
 //source: https://google.github.io/filament/Filament.md.html#materialsystem 8.5.1.1

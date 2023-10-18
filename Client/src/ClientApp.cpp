@@ -71,7 +71,45 @@ void ClientApp::PostInit()
 	ImGui_ImplWin32_Init(GetBaseWindow().GetHWND());
 	ImGui_ImplDX11_Init(s_device, s_devcon);
 
+	TextureDsc dsc;
+	dsc.arraySize = 1;
+	dsc.width  = 1024;
+	dsc.height = 1024;
+	dsc.depth = 1;
+	dsc.dimension = D3D11_RESOURCE_DIMENSION_TEXTURE2D;
+	dsc.format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	dsc.isCubemap = false;
+	dsc.numMips = 1;
 
+	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/Circle4.dds");
+
+
+	m_aperturefft0.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);
+	m_intermediatefft0.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);
+	m_aperturefft0.MakeShaderResource(DXGI_FORMAT_R32G32B32A32_FLOAT);
+	m_intermediatefft0.MakeShaderResource(DXGI_FORMAT_R32G32B32A32_FLOAT);
+
+
+	dsc.format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	m_aperturefft1.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);
+	m_intermediatefft1.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);
+	m_aperturefft1.MakeShaderResource(DXGI_FORMAT_R32G32B32A32_FLOAT);
+	m_intermediatefft1.MakeShaderResource(DXGI_FORMAT_R32G32B32A32_FLOAT);
+
+	m_aperturefft0UAV.createTextureUAV(m_aperturefft0.GetResource(), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, 0);
+	m_aperturefft1UAV.createTextureUAV(m_aperturefft1.GetResource(), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, 0);
+	m_intermediatefft0UAV.createTextureUAV(m_intermediatefft0.GetResource(), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, 0);
+	m_intermediatefft1UAV.createTextureUAV(m_intermediatefft1.GetResource(), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, 0);
+
+	renderer::ShaderResourceView* srvs[2] = { &m_aperturefft0.GetSRV(), &m_aperturefft1.GetSRV() };
+	renderer::D3DRenderer::Get().computeTestFFT(*m_aperture, &m_aperturefft0UAV, &srvs[0], &m_intermediatefft0UAV, 1024, 1024);
+
+	renderer::UnorderedAccessView::ClearCS(0);
+	renderer::UnorderedAccessView::ClearCS(1);
+
+	renderer::ShaderResourceView::ClearCS(64);
+	renderer::ShaderResourceView::ClearCS(65);
 
 }
 
@@ -175,6 +213,11 @@ void ClientApp::Update(float DeltaTime)
 		ImGui::Image((void*)smTx.GetSRV().getView(), ImVec2(512, 512));
 		ImGui::Text("Depth from spotlight");
 		ImGui::Image((void*)spotTx.GetSRV().getView(), ImVec2(512, 512));
+		ImGui::End();
+
+		ImGui::Begin("Debug FFT");
+		ImGui::Image((void*)m_aperturefft0.GetSRV().getView(), ImVec2(1024, 1024));
+		ImGui::Image((void*)m_intermediatefft0.GetSRV().getView(), ImVec2(1024, 1024));
 		ImGui::End();
 	}
 

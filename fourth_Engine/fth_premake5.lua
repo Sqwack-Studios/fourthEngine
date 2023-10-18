@@ -112,7 +112,6 @@ project "fourth_Engine"
 		   removeflags("ExcludeFromBuild")
 		   shadertype("Compute")
 
-			shaderoptions({"/WX"})
 
 
     
@@ -137,6 +136,7 @@ project "fourth_Engine"
 		filter "configurations:Debug"
 			defines "ENGINE_DEBUG"
 			symbols "on"
+			optimize "off"
 		links
 		{
 			"%{wks.location}/%{prj.name}/vendor/DirectXTex/lib/bin_Debug/DirectXTex"
@@ -148,6 +148,7 @@ project "fourth_Engine"
 			defines "ENGINE_RELEASE"
 			optimize "on"
 			symbols "on"
+		shaderoptions({"/WX"})
 
 		links
 		{
@@ -158,7 +159,10 @@ project "fourth_Engine"
 		filter "configurations:Dist"
 			defines "ENGINE_DIST"
 			defines "NDEBUG"
-			optimize "on"
+			symbols "off"
+			optimize "full"
+		shaderoptions({"/WX"})
+
 		links
 		{
 			"%{wks.location}/%{prj.name}/vendor/DirectXTex/lib/bin_Release/DirectXTex"

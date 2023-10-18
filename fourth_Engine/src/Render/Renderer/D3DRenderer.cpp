@@ -140,7 +140,44 @@ namespace fth
 			m_mainCamera.UpdateViewPortSettings(vpSettings);
 			m_mainCamera.UpdateMatrices();
 		}
+		void D3DRenderer::computeTestFFT(const Texture& src, UnorderedAccessView* targets, ShaderResourceView** targetsSRV, UnorderedAccessView* intermediates, uint16_t sizeX, uint16_t sizeY)
+		{
+			src.GetSRV().BindCS(SRV_PP_SLOT0);
 
+			targets[0].BindCS(UAV_PP_COMPUTE_SLOT0);
+			//targets[1].BindCS(UAV_PP_COMPUTE_SLOT1);
+			//m_fft0_CS.bind();
+
+			m_fftdouble_CS.bind();
+			fftdata meta;
+			meta.meta = 3;
+
+			{
+				fftdata* map = static_cast<fftdata*>(m_fftUniform.Map());
+				memcpy(map, &meta, sizeof(fftdata));
+				m_fftUniform.Unmap();
+				m_fftUniform.BindCS(2);
+			}
+			ComputeShader::dispatch(sizeX, 1, 1);
+
+			meta.meta = 2;
+
+			intermediates[0].BindCS(UAV_PP_COMPUTE_SLOT0);
+			//intermediates[1].BindCS(UAV_PP_COMPUTE_SLOT1);
+			targetsSRV[0]->BindCS(SRV_PP_SLOT0);
+			//targetsSRV[1]->BindCS(SRV_PP_SLOT1);
+
+			{
+				fftdata* map = static_cast<fftdata*>(m_fftUniform.Map());
+				memcpy(map, &meta, sizeof(fftdata));
+				m_fftUniform.Unmap();
+				m_fftUniform.BindCS(2);
+			}
+
+			//add vertical pass
+			//m_fft1_CS.bind();
+			ComputeShader::dispatch(sizeY, 1, 1);
+		};
 		void D3DRenderer::Init(uint16_t width, uint16_t height, uint16_t multisamples)
 		{
 
@@ -358,7 +395,10 @@ namespace fth
 			m_depthPassCube_VS.LoadShader(L"ShadowPass_Cube_VS.cso", ied, static_cast<uint32_t>(std::size(ied)));
 			m_depthPassCube_GS.LoadShader(L"ShadowPass_Cube_GS.cso");
 
-			m_fft_CS.loadShader(L"FFT_CS.cso");
+			//m_fft0_CS.loadShader(L"FFT_TRIPLE_R2C_CS.cso");
+			//m_fft1_CS.loadShader(L"FFT_TRIPLE_C2C_CS.cso");
+			m_fftdouble_CS.loadShader(L"FFT_C2C_CS.cso");
+
 		}
 
 		void D3DRenderer::AttachLDR_Target(const fth::Texture& texture)
@@ -798,37 +838,7 @@ namespace fth
 			UnbindViews();
 
 		
-			fftdata2 data;
-			data.fft_height = 1;
-			data.fft_width = 2048;
-			data.forward = 1;
-			data.log2_fft_size = 11;
-			//fftdata data;
-			//data.input_width = m_width;
-			//data.input_height = m_height;
-			//data.channel_no = 3;
-			//data.output_width = m_realXYZimX.Width();
-			//data.output_height = m_realXYZimX.Height();
-			//data.clz_width = fft2d_clz(data.output_width) + 1;
-			//data.clz_height = fft2d_clz(data.output_height) + 1;
-			//data.logtwo_width = 32 - data.clz_width;
-			//data.logtwo_height = 32 - data.clz_height;
-			//data.stage = 0;
-
-			m_fft_CS.bind();
-			m_hdrBufferColor.MakeCopy(m_output);
-			UnorderedAccessView::BindCS(m_fftUAVs, 3, 0);
-
-			fftdata2* map = static_cast<fftdata2*>(m_fftUniform.Map());
-			memcpy(map, &data, sizeof(data));
-			m_fftUniform.Unmap();
-
-			m_fftUniform.BindCS(2);
-			ComputeShader::dispatch(1024, 1, 1);
-
-			UnorderedAccessView::ClearCS(0);
-			UnorderedAccessView::ClearCS(1);
-			UnorderedAccessView::ClearCS(2);
+		
 
 
 			switch (m_bloomTechnique)

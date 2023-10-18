@@ -17,48 +17,29 @@ Complex complexConjugate(in Complex a)
 
 
 
-
 //FWD FFT; input a HDR RGBA_16 texture 
 //FFT outputs float3 Real and Imaginary part, which are organized as two textures:
 //float4 -> RGB = Real ; A = Imaginary.x (RGBA_32)
 //float2 -> RG = Imaginary.yz; (RG_32)
 
-struct FFTForwardInoutHorizontal 
-{
-    RWTexture2D<float4> input;
-    RWTexture2D<float4> ReRGBImA;
-    RWTexture2D<float2> ImRG;
-};
-
-struct FFTForwardInoutVertical
-{
-    RWTexture2D<float4> ReRGBImA;
-    RWTexture2D<float2> ImRG;
-};
-struct FFTConvolute
-{
-    Texture2D<float2>   convWeights;
-    RWTexture2D<float4> ReRGBImA;
-    RWTexture2D<float2> ImRG;
-};
-
-struct FFTInverseInoutVertical
-{
-    RWTexture2D<float4> ReRGBImA;
-    RWTexture2D<float2> ImRG;
-};
-
-struct FFTInverseInoutHorizontal
-{
-    RWTexture2D<float4> output;
-    RWTexture2D<float4> ReRGBImA;
-    RWTexture2D<float2> ImRG;
-};
 
 uint expand(in uint idxL, in uint N1, in uint N2)
 {
     return (idxL / N1) * N1 * N2 + (idxL % N1);
 }
+
+float signalScaleFactor(in const bool isForward, in const uint signalLenght)
+{
+    if (isForward)
+    {
+        return 1.0f;
+    }
+    else
+    {
+        return 1.0f / float(signalLenght);
+    }
+}
+
 #if 1
 groupshared float sharedReal[SIGNAL_LENGTH];
 groupshared float sharedImag[SIGNAL_LENGTH];
@@ -66,33 +47,44 @@ groupshared float sharedImag[SIGNAL_LENGTH];
 void copyBufferToShared(in uint head, in uint stride, inout Complex buffer[RADIX])
 {
     //If I'm not wrong, multiplication is more expensive than addition
-
-    [unroll]
-    for (uint r_R = 0, sharedIdx_R = head; r_R < RADIX; ++r_R, sharedIdx_R += stride)
+    uint r = 0;
+    uint sharedIdx = head;
+    
+    [unroll(RADIX)]
+    for (; r < RADIX; ++r, sharedIdx += stride)
     {
-        sharedReal[sharedIdx_R] = buffer[r_R].x;
+        sharedReal[sharedIdx] = buffer[r].x;
     }
 
-    [unroll]
-    for (uint r_I = 0, sharedIdx_I = head; r_I < RADIX; ++r_I, sharedIdx_I += stride)
+    r = 0;
+    sharedIdx = head;
+    
+    [unroll(RADIX)]
+    for (; r < RADIX; ++r, sharedIdx += stride)
     {
-        sharedImag[sharedIdx_I] = buffer[r_I].y;
+        sharedImag[sharedIdx] = buffer[r].y;
     }
 
 }
 
 void copySharedToBuffer(in uint head, in uint stride, inout Complex buffer[RADIX])
 {
-    [unroll]
-    for(uint r_R = 0, sharedIdx_R = head; r_R < RADIX; ++r_R, sharedIdx_R += stride)
+    uint r = 0;
+    uint sharedIdx = head;
+    
+    [unroll(RADIX)]
+    for(; r < RADIX; ++r, sharedIdx += stride)
     {
-        buffer[r_R].x = sharedReal[sharedIdx_R];
+        buffer[r].x = sharedReal[sharedIdx];
     }
     
-    [unroll]
-    for (uint r_I = 0, sharedIdx_I = head; r_I < RADIX; ++r_I, sharedIdx_I += stride)
+    r = 0;
+    sharedIdx = head;
+    
+    [unroll(RADIX)]
+    for (; r < RADIX; ++r, sharedIdx += stride)
     {
-        buffer[r_I].y = sharedReal[sharedIdx_I];
+        buffer[r].y = sharedImag[sharedIdx];
     }
 
 }
@@ -177,7 +169,11 @@ void FFT_Radix_2(inout Complex threadBuffer[RADIX])
     Complex temp = threadBuffer[0];
     threadBuffer[0] = temp + threadBuffer[1];
     threadBuffer[1] = temp - threadBuffer[1]; // double subtraction of index 1 is another option
+
+    //threadBuffer[0] = threadBuffer[0] + threadBuffer[1];
+    //threadBuffer[1] = threadBuffer[0] - threadBuffer[1] - threadBuffer[1];
 }
+
 void FFT_Radix_R(in bool isForward, inout Complex threadBuffer[RADIX])
 {
 #if RADIX == 2
@@ -193,16 +189,18 @@ void FFT_Radix_R(in bool isForward, inout Complex threadBuffer[RADIX])
                            threadBuffer[4], threadBuffer[5], threadBuffer[6], threadBuffer[7])
 #endif
 }
+
 void twiddle(in const bool isForward, inout Complex threadBuffer[RADIX], in const uint threadIdx, in const uint N)
 {
-    const float angle = isForward ? 
+    const float angle = isForward ?
     -TWO_PI * float(threadIdx % N) / float(N << RADIX_LOG) : //isForward
-     TWO_PI * float(threadIdx % N) / float(N << RADIX_LOG);  //not forward
+     TWO_PI * float(threadIdx % N) / float(N << RADIX_LOG); //not forward
 
     Complex twiddleBase;
     sincos(angle, twiddleBase.y, twiddleBase.x);
     
     Complex twiddle = twiddleBase;
+    [unroll(RADIX)]
     for (uint r = 1; r < RADIX; ++r)
     {
         threadBuffer[r] = complexMult(twiddle, threadBuffer[r]); //index 0 access and multiplication is useless because its power 0
@@ -214,48 +212,26 @@ void twiddle(in const bool isForward, inout Complex threadBuffer[RADIX], in cons
 //Complex-2-complex
 void stockhamShared(in const uint N, in const uint threadIdx, in const bool isForward, inout Complex threadBuffer[RADIX])
 {
-    const uint numGroups = N / RADIX;
+    const uint numThreads = N / RADIX;
     const uint sharedBufferHead = threadIdx; // -> this number is always equal to threadIdx because (thread / numGroups) = 0, and %(thread / cols) = thread. thread [0, NUM_GROUPS - 1]
 
     //TODO: optimizations can be made for the initial and last case, avoiding extra loops and simple arithmetic
-    
+    uint Ns = 1;
+    uint localBufferHead = threadIdx;
+
     [unroll]
-    for (uint Ns = 1; Ns < N; Ns << RADIX_LOG)
+    for (; Ns < N; Ns *= RADIX)
     {
         twiddle(isForward, threadBuffer, threadIdx, Ns);
+        localBufferHead = expand(threadIdx, Ns, RADIX);
 
         FFT_Radix_R(isForward, threadBuffer);
-
-        uint localBufferHead = expand(threadIdx, Ns, RADIX);
         
-        syncronizeData(localBufferHead, Ns, sharedBufferHead, numGroups, threadBuffer);
+        GroupMemoryBarrierWithGroupSync();
+
+        syncronizeData(localBufferHead, Ns, sharedBufferHead, numThreads, threadBuffer);
     }
 
-}
-
-void loadForwardHorizontal()
-{
-    
-}
-
-void loadForwardVertical()
-{
-    
-}
-
-void loadConvolutionStage()
-{
-    
-}
-
-void loadInverseHorizontal()
-{
-    
-}
-
-void loadInverseVertical()
-{
-    
 }
 
 #endif //FFT_STOCKHAM_HLSLI

@@ -2,15 +2,22 @@
 #include "../Common.hlsli"
 
 #define SIGNAL_LENGTH 1024
-#define RADIX 2
-#define RADIX_LOG 1 
+#define SIGNAL_LOG    10
+
+//#define SIGNAL_LENGTH 32
+//#define SIGNAL_LOG    5
+//#define SIGNAL_LENGTH 512
+//#define SIGNAL_LOG    9
+
+#define RADIX         2
+#define RADIX_LOG     1 
 #define WORKGROUP_SIZE_X (SIGNAL_LENGTH / RADIX)
 #define STRIDE WORKGROUP_SIZE_X
 
-//#define ALL_CHANNELS   4
-//#define COLOR_CHANNELS 3
-//#define DUAL_CHANNEL   2
-//#define SINGLE_CHANNEL 1
+#define ALL_CHANNELS   4
+#define COLOR_CHANNELS 3
+#define DUAL_CHANNEL   2
+#define SINGLE_CHANNEL 1
 
 #include "FFT_Stockham.hlsli"
 
@@ -19,138 +26,120 @@
 cbuffer fftImageDsc : register(CB_PP_0)
 {
 	 uint g_TransformFlags;
+     uint3 pad;
 }
 
 //high performance FFT on gpus: v[r] = data[idxG + r * T]
 //where idxG + r * T is the flattened 2D index [threadLoc][scanLine]
 //idxG = b * N + t (block index, signal lenght, threadLocal)
 
-#if NUM_CHANNELS == COLOR_CHANNELS
-
-//Use this function if you want to interpret your incoming signal as a completely REAL signal. Complex part will be filled with zeros. Not the most efficient.
-void loadSrcRealToLocalBuffer(
-           inout Complex threadBuffer[NUM_CHANNELS][RADIX], 
-           in const bool isHorizontal, 
-           in const uint localThread, 
-           in const uint scanLine, 
-           in const uint stride,
-           in Texture2D<float4> src)
+void loadSrcToLocalBuffer(
+                   inout Complex threadBuffer[2][RADIX],
+                   in const bool isHorizontal,
+                   in const uint scanLine,
+                   in const uint localThread,
+                   in const uint stride,
+                   in Texture2D<float4> src)
 {
-    float4 loadedData;
-	if(isHorizontal)
+    float4 loadValue;
+    if(isHorizontal)
     {
         uint2 texel = uint2(localThread, scanLine);
-
-        [unroll]
+        
+        [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r, texel.x += stride)
         {
-            loadedData = src[texel];
-            threadBuffer[0][r] = Complex(loadedData.x, 0.0f);
-            threadBuffer[1][r] = Complex(loadedData.y, 0.0f);
-            threadBuffer[2][r] = Complex(loadedData.z, 0.0f);
-
+            loadValue = src[texel];
+            loadValue.yw = float2(0.0f, 0.0f);
+            
+            threadBuffer[0][r] = loadValue.xy;
+            threadBuffer[1][r] = loadValue.zw;
         }
 
     }
     else
     {
         uint2 texel = uint2(scanLine, localThread);
-
-        [unroll]
+        
+        [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r, texel.y += stride)
         {
-            loadedData = src[texel];
-            threadBuffer[0][r] = Complex(loadedData.x, 0.0f);
-            threadBuffer[1][r] = Complex(loadedData.y, 0.0f);
-            threadBuffer[2][r] = Complex(loadedData.z, 0.0f);
+            loadValue = src[texel];
+            threadBuffer[0][r] = loadValue.xy;
+            threadBuffer[1][r] = loadValue.zw;
         }
+
     }
 }
-//Use this function to save a triple channel fourier transform that is splitted in two SRV textures(float4 + float2)
-void saveComplexLocalBufferToDestination(
-           inout Complex threadBuffer[NUM_CHANNELS][RADIX], 
-           in const bool isHorizontal, 
-           in const uint localThread, 
-           in const uint scanLine, 
-           in const uint stride,
-           in RWTexture2D<float4> dst0,
-           in RWTexture2D<float2> dst1)
+
+void saveLocalBufferToDestination(
+                   inout Complex threadBuffer[2][RADIX],
+                   in const bool isHorizontal,
+                   in const uint scanLine,
+                   in const uint localThread,
+                   in const uint stride,
+                   in RWTexture2D<float4> dst)
 {
-    float4 writeData0;
-    float2 writeData1;
-	if(isHorizontal)
+    float4 dstValue;
+    
+    if(isHorizontal)
     {
         uint2 texel = uint2(localThread, scanLine);
-
-        [unroll]
+        
+        [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r, texel.x += stride)
         {
-            writeData0 = float4(threadBuffer[0].x, threadBuffer[1].x, threadBuffer[2].x, threadBuffer[0].y);
-            writeData1 = float2(threadBuffer[1].y, threadBuffer[2].z);
-            
-            dst0[texel] = writeData0;
-            dst1[texel] = writeData1;
+            dstValue.xy = threadBuffer[0][r];
+            dstValue.zw = threadBuffer[1][r];
+            dst[texel] = dstValue;
         }
 
     }
     else
     {
         uint2 texel = uint2(scanLine, localThread);
-
-        [unroll]
+        
+        [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r, texel.y += stride)
         {
-            writeData0 = float4(threadBuffer[0].x, threadBuffer[1].x, threadBuffer[2].x, threadBuffer[0].y);
-            writeData1 = float2(threadBuffer[1].y, threadBuffer[2].z);
-            
-            dst0[texel] = writeData0;
-            dst1[texel] = writeData1;
+            dstValue.xy = threadBuffer[0][r];
+            dstValue.x = log2(dstValue.x * dstValue.x + dstValue.y * dstValue.y + 1.0f);
+            dstValue.zw = threadBuffer[1][r];
+            dstValue.z = log2(dstValue.x * dstValue.x + dstValue.y * dstValue.y + 1.0f);
+            dst[texel] = dstValue;
         }
+
     }
 }
 
-//This function will load your three-channel FFT in two textures (float4 + float2)
-void loadSrcComplexToLocalBuffer(
-           inout Complex threadBuffer[NUM_CHANNELS][RADIX], 
-           in const bool isHorizontal, 
-           in const uint localThread, 
-           in const uint scanLine, 
-           in const uint stride,
-           in Texture2D<float4> dst0,
-           in Texture2D<float2> dst1)
-{
 
-}
 
-void loadKernel(inout Complex kernelBuffer[NUM_CHANNELS][RADIX])
+void scaleSignal(inout Complex threadBuffer[NUM_CHANNELS][RADIX], in const float scaleFactor)
 {
     
+    [unroll(NUM_CHANNELS)]
+    for (uint ch = 0; ch < NUM_CHANNELS; ++ch)
+    {
+        [unroll(RADIX)]
+        for (uint r = 0; r < RADIX; ++r)
+        {
+            threadBuffer[ch][r] *= scaleFactor;
+        }
+
+    }
+
 }
-
-
-#elif NUM_CHANNELS == DUAL_CHANNEL
-
-//Use this function to load signal float4 texture that will be interpreted as two complex (R +iG), (B +iA) signals. Result will be saved in a single float4 RW texture
-
-void loadKernel(inout Complex kernelBuffer[NUM_CHANNELS][RADIX])
-{
-    
-}
-
-#elif NUM_CHANNELS == SINGLE_CHANNEL
-
-#endif
 
 
 
 void sharedFFT(in const uint N, in const uint threadIdx, in const bool isForward, inout Complex threadBuffer[NUM_CHANNELS][RADIX])
 {
-    [unroll]
-    for (uint ch = 0; r < NUM_CHANNELS; ++ch)
+    [unroll(NUM_CHANNELS)]
+    for (uint ch = 0; ch < NUM_CHANNELS; ++ch)
     {
         stockhamShared(N, threadIdx, isForward, threadBuffer[ch]);
     }
-
+    
 }
 
 
@@ -206,14 +195,13 @@ void sharedFFT(in const uint N, in const uint threadIdx, in const bool isForward
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Texture2D<float4>   srcSignal        : register(SRV_PP_0);
-RWTexture2D<float4> dstRe_rgb_Im_r   : register(UAV_PP_0);
-RWTexture2D<float2> dstIm_gb         : register(UAV_PP_0);
+RWTexture2D<float4> dstRe_rgb_Im_r   : register(UAV_PP_COMPUTE_0);
+RWTexture2D<float2> dstIm_gb         : register(UAV_PP_COMPUTE_1);
 
-#define NUM_CHANNELS COLOR_CHANNELS
 
 
 [numthreads(WORKGROUP_SIZE_X, 1, 1)]
-void stockhamSharedR2CFFT(uint3 id : SV_DispatchThreadID, uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
+void main(uint3 id : SV_DispatchThreadID, uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 {
 
 	Complex threadBuffer[NUM_CHANNELS][RADIX];
@@ -224,13 +212,15 @@ void stockhamSharedR2CFFT(uint3 id : SV_DispatchThreadID, uint3 tid : SV_GroupTh
     const uint localThreadID = tid.x;
     const uint dataStride = STRIDE;
 
-    loadSrcRealToLocalBuffer(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride);
+    loadSrcRealToLocalBuffer(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride, srcSignal);
+
+    GroupMemoryBarrierWithGroupSync();
 
     sharedFFT(SIGNAL_LENGTH, localThreadID, isForward, threadBuffer);
     
-    GroupMemoryBarrierWithGroupSync();
     
-    saveComplexLocalBufferToDestination(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride);
+    saveComplexLocalBufferToDestination(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride, dstRe_rgb_Im_r, dstIm_gb);
+
 }
 
 #endif
@@ -299,22 +289,55 @@ void stockhamSharedC2RFFT(uint3 id : SV_DispatchThreadID, uint3 tid : SV_GroupTh
 
 #ifdef STOCKHAM_C2C_INPLACE
 
-    RWTexture2D<float4> inoutTexture0 : register(UAV_PP_0);
-    RWTexture2D<float2> inoutTexture1 : register(UAV_PP_0);
+    RWTexture2D<float4> inoutTexture0 : register(UAV_PP_COMPUTE_0);
+    RWTexture2D<float2> inoutTexture1 : register(UAV_PP_COMPUTE_1);
 
     #else
 
     Texture2D<float4> srcTexture0     : register(SRV_PP_0);
     Texture2D<float2> srcTexture1     : register(SRV_PP_1);
-    RWTexture2D<float4> inoutTexture0 : register(UAV_PP_0);
-    RWTexture2D<float2> inoutTexture1 : register(UAV_PP_0);
+    RWTexture2D<float4> dstTexture0 : register(UAV_PP_COMPUTE_0);
+    RWTexture2D<float2> dstTexture1 : register(UAV_PP_COMPUTE_0);
 
     #endif
 
 [numthreads(WORKGROUP_SIZE_X, 1 ,1)]
-void stockhamSharedC2CFFT(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
+void main(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 {
-	
+	Complex threadBuffer[NUM_CHANNELS][RADIX];
+    const bool isHorizontal = g_TransformFlags & 0x01;
+    const bool isForward    = g_TransformFlags & 0x02;
+
+    const uint scanLine = gid.x;
+    const uint localThreadID = tid.x;
+    const uint dataStride = STRIDE;
+
+#ifdef STOCKHAM_C2C_INPLACE
+
+    loadSrcComplexToLocalBuffer(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride, inoutTexture0, inoutTexture1);
+
+#else
+
+    loadSrcComplexToLocalBuffer(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride, srcTexture0, srcTexture1);
+
+#endif
+
+    GroupMemoryBarrierWithGroupSync();
+
+    sharedFFT(SIGNAL_LENGTH, localThreadID, isForward, threadBuffer);
+    
+
+#ifdef STOCKHAM_C2C_INPLACE
+
+    saveComplexLocalBufferToDestination(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride, inoutTexture0, inoutTexture1);
+
+
+#else
+
+    saveComplexLocalBufferToDestination(threadBuffer, isHorizontal, localThreadID, scanLine, dataStride, dstTexture0, dstTexture1);
+
+#endif
+
 }
 
 #endif
@@ -343,20 +366,29 @@ void stockhamSharedC2CFFT(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#ifdef STOCKHAM_C2C_INPLACE
 
-    RWTexture2D<float4> inoutTexture0  : register(UAV_PP_0);
-
-#else
-
-    Texture2D<float4>   srcTexture0     : register(SRV_PP_0);
-    RWTexture2D<float4> dsrTexture0     : register(UAV_PP_0);
-#endif
+Texture2D<float4>   srcTexture0     : register(SRV_PP_0);
+RWTexture2D<float4> dstTexture0     : register(UAV_PP_COMPUTE_0);
 
 [numthreads(WORKGROUP_SIZE_X, 1 ,1)]
-void stockhamSharedC2CFFT(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
+void main(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 {
-	
+	Complex threadBuffer[2][RADIX];
+    const bool isHorizontal = g_TransformFlags & 0x01;
+    const bool isForward    = g_TransformFlags & 0x02;
+
+    const uint localThreadID = tid.x;
+    const uint scanLine = gid.x;
+    const uint dataStride = STRIDE;
+
+    loadSrcToLocalBuffer(threadBuffer, isHorizontal, scanLine, localThreadID, dataStride, srcTexture0);
+
+
+    sharedFFT(SIGNAL_LENGTH, localThreadID, isForward, threadBuffer);
+    
+    
+    saveLocalBufferToDestination(threadBuffer, isHorizontal, scanLine, localThreadID, dataStride, dstTexture0);
+
 }
 
 #endif

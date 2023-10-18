@@ -2,17 +2,17 @@
 #include "../Common.hlsli"
 struct VSIn
 {
-	float3 lPos : POSITION;
-	float3 lNormal : NORMAL;
-	float3 lTangent: TANGENT;
+	float3 lPos       : POSITION;
+	float3 lNormal    : NORMAL;
+	float3 lTangent   : TANGENT;
 	float3 lBitangent : BITANGENT;
-	float2 uv      : UV;
+	float2 uv         : UV;
 
-	float4 MWRight : MW0;
-	float4 MWUp    : MW1;
-	float4 MWFwd   : MW2;
-	float4 MWPos   : MW3;
-	uint   objectID : ID;
+	float4 MWRight    : MW0;
+	float4 MWUp       : MW1;
+	float4 MWFwd      : MW2;
+	float4 MWPos      : MW3;
+	uint   objectID   : ID;
 };
 
 struct VSOut

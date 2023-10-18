@@ -146,6 +146,7 @@ namespace fth
 				StartFrame();
 
 				UpdateInternal(deltaTime);
+				renderer::D3DRenderer::Get().StartFrame();
 				renderer::D3DRenderer::Get().Render();
 
 				OnRender();
@@ -179,8 +180,6 @@ namespace fth
 	void EngineApp::StartFrame()
 	{
 		m_Tick.Step();
-		renderer::D3DRenderer::Get().StartFrame();
-
 	}
 
 	void EngineApp::EndFrame()

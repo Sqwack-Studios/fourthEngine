@@ -96,6 +96,10 @@ namespace fth
 				return instance;
 			};
 
+			void computeTestFFT(const Texture& src, UnorderedAccessView* targets, ShaderResourceView** targetsSRV, UnorderedAccessView* intermediates, uint16_t sizeX, uint16_t sizeY);
+
+
+
 			void Init(uint16_t width, uint16_t height, uint16_t multisamples);
 			void Shutdown();
 
@@ -291,7 +295,11 @@ namespace fth
 			GeometryShader                                  m_depthPassCube_GS;
 
 			//MipChain
-			ComputeShader                                   m_fft_CS;
+			ComputeShader                                   m_fft0_CS;
+			ComputeShader                                   m_fft1_CS;
+			ComputeShader                                   m_fftdouble_CS;
+
+
 
 			std::unique_ptr<Grid>                           m_Grid = nullptr;
 			std::unique_ptr<Skybox>                         m_Skybox = nullptr;
@@ -367,19 +375,8 @@ namespace fth
 
 		struct fftdata
 		{
-			int input_width;
-			int input_height;
-			int output_width;
-			int output_height;
-
-			int logtwo_width;
-			int logtwo_height;
-			int clz_width;
-			int clz_height;
-
-			int channel_no;
-			int stage;
-			float pad[2];
+			uint32_t  meta;
+			uint32_t  pad[3];
 		};
 
 		struct fftdata2
