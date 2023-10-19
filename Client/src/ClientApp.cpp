@@ -81,7 +81,7 @@ void ClientApp::PostInit()
 	dsc.isCubemap = false;
 	dsc.numMips = 1;
 
-	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/Circle4.dds");
+	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/Circle5.dds");
 
 
 	m_aperturefft0.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);
@@ -1042,12 +1042,12 @@ void ClientApp::LoadTexturesAndModels()
 	//Texture name should be: MODEL_MESH_TYPE.dds
 	//For each mesh, search for a texture that matches these characteristics
 
-	
+
 	TextureManager::Get().LoadTextures("Textures/Mud/Mud_BaseColor.dds");
 	TextureManager::Get().LoadTextures("Textures/Mud/Mud_Normal.dds");
 	TextureManager::Get().LoadTextures("Textures/Mud/Mud_Roughness.dds");
 
-
+	
 	TextureManager::Get().LoadTextures("Textures/MetalRose/MetalRose_BaseColor.dds");
 
 

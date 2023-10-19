@@ -98,15 +98,21 @@ void saveLocalBufferToDestination(
     else
     {
         uint2 texel = uint2(scanLine, localThread);
+        const float2 shiftUV = 0.50f;
         
         [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r, texel.y += stride)
         {
+            float2 texelUV = float2(texel) / float(SIGNAL_LENGTH);
+            
+            float2 destUV = frac(texelUV + shiftUV);
+            uint2 finalTexel = destUV * SIGNAL_LENGTH;
+            
             dstValue.xy = threadBuffer[0][r];
             dstValue.x = log2(dstValue.x * dstValue.x + dstValue.y * dstValue.y + 1.0f);
             dstValue.zw = threadBuffer[1][r];
             dstValue.z = log2(dstValue.x * dstValue.x + dstValue.y * dstValue.y + 1.0f);
-            dst[texel] = dstValue;
+            dst[finalTexel] = dstValue;
         }
 
     }
@@ -376,6 +382,7 @@ void main(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 	Complex threadBuffer[2][RADIX];
     const bool isHorizontal = g_TransformFlags & 0x01;
     const bool isForward    = g_TransformFlags & 0x02;
+    const bool shift        = g_TransformFlags & 0x04;
 
     const uint localThreadID = tid.x;
     const uint scanLine = gid.x;

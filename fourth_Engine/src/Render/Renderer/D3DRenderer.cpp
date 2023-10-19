@@ -778,7 +778,7 @@ namespace fth
 			BindBlendState(BSTYPES::GENERAL_TRANSLUCENCY_ALBEDO_ROUGHMETAL_EMISSION);
 			DecalSystem::Get().draw();
 
-
+			
 			//----------RESOLVE INTO HDR TARGET---------//
 			//1-Bind HDR target as RTV
 			//2-BindGBuffer as SRV

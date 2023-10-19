@@ -40,6 +40,42 @@ float signalScaleFactor(in const bool isForward, in const uint signalLenght)
     }
 }
 
+
+//The fourier transform is periodic:
+//Let F(k, w) the 2DFT of f(x, y), period NxN where N is the signal length
+//Then, it satisfies next properties:
+//
+//   1) ->   F(k,w) = F(k + N, w) = F(k, w + N) = F(k + N, w + N)
+//
+//   If f(x,y) is a pure real valued function, then:
+//
+//   2) ->    F(k,w)  = F*(-k, -w)
+//   3) ->   |F(k,w)| = |F(-k, -w)|
+//
+//   If our frequency origin is at zero, and we want to move our frequency origin to a  spectral frequency k0, w0, then we can make a phase shift phi = (k0 * x + w0 * y) / N
+//
+//   Because the fourier transform phase term is exp[-i2PI/N * (kx + wy)], we can see that a frequency domain shift k -> k - k0, w -> w - w0
+//
+//             exp{-i2PI/N * [(k - k0) * x + (w - w0) * y] } = exp[-i2PI/N * (kx + wy)] * exp[i2PI/N * (k0x + w0y)], which leds to the previous phase shift proposed
+//
+//   In the specific case where we cant to shift the frequency to the center of the period N/2 -> k0 = N/2, w0 = N/2
+//   
+//            F(k-k0, w-w0) = FFT{f(x,y) * exp[iPI(x+y)]} = FFT(f(x,y) * (-1)^{x+y}))
+//
+
+//This function will multiply the input signal by a complex value based on a target UV position
+Complex shiftByPhase(in const float2 UVshift)
+{
+
+}
+
+//The fourier transform is correct without shifting. However, we don't want to make any extra computations. This function will return a desination texel for this thread and scanLine, where
+//it should write the output. This thread should write into that texel.
+uint2 shiftByIndex(in const uint threadId, in const uint scanLine)
+{
+
+}
+
 #if 1
 groupshared float sharedReal[SIGNAL_LENGTH];
 groupshared float sharedImag[SIGNAL_LENGTH];
@@ -85,6 +121,7 @@ void copySharedToBuffer(in uint head, in uint stride, inout Complex buffer[RADIX
     for (; r < RADIX; ++r, sharedIdx += stride)
     {
         buffer[r].y = sharedImag[sharedIdx];
+        
     }
 
 }
