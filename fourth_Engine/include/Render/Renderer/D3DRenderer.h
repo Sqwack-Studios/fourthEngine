@@ -298,6 +298,8 @@ namespace fth
 			ComputeShader                                   m_fft0_CS;
 			ComputeShader                                   m_fft1_CS;
 			ComputeShader                                   m_fftdouble_CS;
+			ComputeShader                                   m_fftAperture_CS;
+
 
 
 
@@ -375,8 +377,24 @@ namespace fth
 
 		struct fftdata
 		{
-			uint32_t  meta;
-			uint32_t  pad[3];
+			uint32_t      meta;
+			float         samplingPeriod;
+			float         samplingFrequency;
+			float         pad0;
+			math::Vector2 shift;
+			float         pad1[2];
+		};
+
+		struct aperturefft
+		{
+			uint32_t      meta;
+			float         samplingPeriod;
+			float         samplingFrequency;
+			float         wavelength;
+
+			float         focalDistance;
+			math::Vector2 shift;
+			float         apertureSize;
 		};
 
 		struct fftdata2

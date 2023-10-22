@@ -148,28 +148,50 @@ namespace fth
 			//targets[1].BindCS(UAV_PP_COMPUTE_SLOT1);
 			//m_fft0_CS.bind();
 
-			m_fftdouble_CS.bind();
-			fftdata meta;
-			meta.meta = 3;
-
+			enum FFT_FLAGS
 			{
-				fftdata* map = static_cast<fftdata*>(m_fftUniform.Map());
-				memcpy(map, &meta, sizeof(fftdata));
+				HORIZONTAL   = 0x01,
+				FORWARD      = 0x02,
+				FIRST_PASS   = 0x04,
+				CUSTOM_SCALE = 0x08,
+				SHIFT        = 0x10
+			};
+
+			m_fftAperture_CS.bind();
+			//m_fftdouble_CS.bind();
+			//fftdata meta;
+			//meta.meta = { FFT_FLAGS::HORIZONTAL | FORWARD | FIRST_PASS | SHIFT };
+
+
+			constexpr float apertureSize = 2.0f;//1mm
+			constexpr float wavelength = 532.0e-6f;
+			constexpr float sensorSize = 20.0f;
+			constexpr float focalLength = 20.0f;
+			aperturefft meta;
+			meta.meta = { FFT_FLAGS::HORIZONTAL | FORWARD | FIRST_PASS | CUSTOM_SCALE | SHIFT  };
+			meta.samplingPeriod = sensorSize / 1024.0f;
+			meta.samplingFrequency = 1024.0f / sensorSize;
+			meta.wavelength = wavelength;
+			meta.focalDistance = focalLength;
+			meta.apertureSize = apertureSize;
+			meta.shift = { 0.5f, 0.5f };
+			{
+				aperturefft* map = static_cast<aperturefft*>(m_fftUniform.Map());
+				memcpy(map, &meta, sizeof(aperturefft));
 				m_fftUniform.Unmap();
 				m_fftUniform.BindCS(2);
 			}
 			ComputeShader::dispatch(sizeX, 1, 1);
 
-			meta.meta = 2;
-
+			meta.meta &= ~(HORIZONTAL | FIRST_PASS);
 			intermediates[0].BindCS(UAV_PP_COMPUTE_SLOT0);
 			//intermediates[1].BindCS(UAV_PP_COMPUTE_SLOT1);
 			targetsSRV[0]->BindCS(SRV_PP_SLOT0);
 			//targetsSRV[1]->BindCS(SRV_PP_SLOT1);
 
 			{
-				fftdata* map = static_cast<fftdata*>(m_fftUniform.Map());
-				memcpy(map, &meta, sizeof(fftdata));
+				aperturefft* map = static_cast<aperturefft*>(m_fftUniform.Map());
+				memcpy(map, &meta, sizeof(aperturefft));
 				m_fftUniform.Unmap();
 				m_fftUniform.BindCS(2);
 			}
@@ -398,6 +420,8 @@ namespace fth
 			//m_fft0_CS.loadShader(L"FFT_TRIPLE_R2C_CS.cso");
 			//m_fft1_CS.loadShader(L"FFT_TRIPLE_C2C_CS.cso");
 			m_fftdouble_CS.loadShader(L"FFT_C2C_CS.cso");
+			m_fftAperture_CS.loadShader(L"ApertureDiffraction_CS.cso");
+
 
 		}
 

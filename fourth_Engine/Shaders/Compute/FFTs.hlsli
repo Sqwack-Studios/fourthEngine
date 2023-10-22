@@ -19,22 +19,41 @@
 #define DUAL_CHANNEL   2
 #define SINGLE_CHANNEL 1
 
+static const float invSingalLength = 1.0f / float(SIGNAL_LENGTH);
+
 #include "FFT_Stockham.hlsli"
 
 //----------------NEEDS DEFINITION OF "NUM_CHANNELS"----------------------------------//
+//|------------------------------------------------------------------------------
+//|    uint g_TransformFlags; Any of the following affirmations is true if the bit is SET 
+//|         bit0(0x01) : Horizontal 
+//|         bit1(0x02) : Forward           (the output signal will be scaled by 1.0f during the forward pass, and by 1/SIGNAL_LENGTH during the inverse pass)
+//|         bit2(0x04) : FirstPass         (mandatory in order for the shader to know when to make the scaling and shift operations)
+//|         bit3(0x08) : Use custom scaling(output signal will be scaled using g_fftSamplingPeriod during the last pass)
+//|         bit4(0x10) : Shift             (the output signal will be shifted by (U,V) during the last pass)
+//|
+//|
+//|
+//|_______________________________________________________________________________
 
-cbuffer fftImageDsc : register(CB_PP_0)
+#ifdef FFT_INCLUDE_UNIFORM
+
+cbuffer fftDsc : register(CB_PP_0)
 {
-	 uint g_TransformFlags;
-     uint3 pad;
+	 uint     g_TransformFlags;
+     float    g_fftSamplingPeriod;
+     float    g_fftSamplingFrequency;
+     float    pad;
+     float2   g_fftShift;
 }
+#endif
 
 //high performance FFT on gpus: v[r] = data[idxG + r * T]
 //where idxG + r * T is the flattened 2D index [threadLoc][scanLine]
 //idxG = b * N + t (block index, signal lenght, threadLocal)
 
 void loadSrcToLocalBuffer(
-                   inout Complex threadBuffer[2][RADIX],
+                   inout Complex threadBuffer[NUM_CHANNELS][RADIX],
                    in const bool isHorizontal,
                    in const uint scanLine,
                    in const uint localThread,
@@ -73,52 +92,67 @@ void loadSrcToLocalBuffer(
 }
 
 void saveLocalBufferToDestination(
-                   inout Complex threadBuffer[2][RADIX],
+                   inout Complex threadBuffer[NUM_CHANNELS][RADIX],
                    in const bool isHorizontal,
+                   in const bool shiftOutput,
                    in const uint scanLine,
                    in const uint localThread,
                    in const uint stride,
+                   in const float2 shift,
                    in RWTexture2D<float4> dst)
 {
     float4 dstValue;
-    
+    uint2 texel, finalTexel;
     if(isHorizontal)
     {
-        uint2 texel = uint2(localThread, scanLine);
+        texel = uint2(localThread, scanLine);
         
         [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r, texel.x += stride)
         {
+            finalTexel = texel;
+            if(shiftOutput)
+            {
+                float2 uv = float2(texel) * invSingalLength; //texelUV
+            
+                uv = frac(uv + shift); //finalTexelUV
+                finalTexel = uv * SIGNAL_LENGTH;
+            }
             dstValue.xy = threadBuffer[0][r];
             dstValue.zw = threadBuffer[1][r];
-            dst[texel] = dstValue;
+            dst[finalTexel] = dstValue;
         }
 
     }
     else
     {
-        uint2 texel = uint2(scanLine, localThread);
-        const float2 shiftUV = 0.50f;
+        texel = uint2(scanLine, localThread);
         
         [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r, texel.y += stride)
         {
-            float2 texelUV = float2(texel) / float(SIGNAL_LENGTH);
+            finalTexel = texel;
             
-            float2 destUV = frac(texelUV + shiftUV);
-            uint2 finalTexel = destUV * SIGNAL_LENGTH;
+            if (shiftOutput)
+            {
+                float2 uv = float2(texel) * invSingalLength; //texelUV
             
+                uv = frac(uv + shift); //finalTexelUV
+                finalTexel = uv * SIGNAL_LENGTH - uint2(0, 0);
+            }
             dstValue.xy = threadBuffer[0][r];
-            dstValue.x = log2(dstValue.x * dstValue.x + dstValue.y * dstValue.y + 1.0f);
+            //if(texel.x == 0 && texel.y == 0)
+            //{
+            //  dstValue.xy = 6969.0f;
+            //}
+            //dstValue.x = float(localThread);
+            //dstValue.y = float(scanLine);
             dstValue.zw = threadBuffer[1][r];
-            dstValue.z = log2(dstValue.x * dstValue.x + dstValue.y * dstValue.y + 1.0f);
             dst[finalTexel] = dstValue;
         }
 
     }
 }
-
-
 
 void scaleSignal(inout Complex threadBuffer[NUM_CHANNELS][RADIX], in const float scaleFactor)
 {
@@ -372,7 +406,6 @@ void main(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
 Texture2D<float4>   srcTexture0     : register(SRV_PP_0);
 RWTexture2D<float4> dstTexture0     : register(UAV_PP_COMPUTE_0);
 
@@ -380,9 +413,11 @@ RWTexture2D<float4> dstTexture0     : register(UAV_PP_COMPUTE_0);
 void main(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 {
 	Complex threadBuffer[2][RADIX];
-    const bool isHorizontal = g_TransformFlags & 0x01;
-    const bool isForward    = g_TransformFlags & 0x02;
-    const bool shift        = g_TransformFlags & 0x04;
+    const bool isHorizontal   = g_TransformFlags & 0x01;
+    const bool isForward      = g_TransformFlags & 0x02;
+    const bool isFirstPass    = g_TransformFlags & 0x04;
+    const bool useCustomScale = g_TransformFlags & 0x08;
+    const bool shift          = g_TransformFlags & 0x10;
 
     const uint localThreadID = tid.x;
     const uint scanLine = gid.x;
@@ -393,8 +428,14 @@ void main(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
 
     sharedFFT(SIGNAL_LENGTH, localThreadID, isForward, threadBuffer);
     
-    
-    saveLocalBufferToDestination(threadBuffer, isHorizontal, scanLine, localThreadID, dataStride, dstTexture0);
+    if(!isFirstPass)
+    {
+        const float scaleFactor = useCustomScale? signalScaleFactor(isForward, invSingalLength) * g_fftSamplingPeriod : signalScaleFactor(isForward, invSingalLength);
+
+        scaleSignal(threadBuffer, scaleFactor);
+    }
+
+    saveLocalBufferToDestination(threadBuffer, isHorizontal, shift && !isFirstPass, scanLine, localThreadID, dataStride, g_fftShift, dstTexture0);
 
 }
 

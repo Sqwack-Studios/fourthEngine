@@ -28,7 +28,7 @@ uint expand(in uint idxL, in uint N1, in uint N2)
     return (idxL / N1) * N1 * N2 + (idxL % N1);
 }
 
-float signalScaleFactor(in const bool isForward, in const uint signalLenght)
+float signalScaleFactor(in const bool isForward, in const uint invSignalLenght)
 {
     if (isForward)
     {
@@ -36,7 +36,7 @@ float signalScaleFactor(in const bool isForward, in const uint signalLenght)
     }
     else
     {
-        return 1.0f / float(signalLenght);
+        return invSignalLenght;
     }
 }
 
