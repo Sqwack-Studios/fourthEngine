@@ -28,17 +28,18 @@ uint expand(in uint idxL, in uint N1, in uint N2)
     return (idxL / N1) * N1 * N2 + (idxL % N1);
 }
 
-float signalScaleFactor(in const bool isForward, in const uint invSignalLenght)
-{
-    if (isForward)
-    {
-        return 1.0f;
-    }
-    else
-    {
-        return invSignalLenght;
-    }
-}
+//let's use, for now, unitary scaling (1/sqrt(N) per axis, so we scale in the last pass by 1/N)
+//float signalScaleFactor(in const bool isForward, in const uint invSignalLenght)
+//{
+//    if (isForward)
+//    {
+//        return 1.0f;
+//    }
+//    else
+//    {
+//        return invSignalLenght;
+//    }
+//}
 
 
 //The fourier transform is periodic:
@@ -136,6 +137,7 @@ void syncronizeData(in uint bufferAHead, in uint bufferAStride, in uint bufferBH
 }
 
 #endif
+
 //https://developer.nvidia.com/blog/using-shared-memory-cuda-cc/
 //To minimize bank conflicts, it is important to understand how memory addresses map to memory banks. 
 //Shared memory banks are organized such that successive 32-bit words are assigned to successive banks and the bandwidth is 32 bits per bank per clock cycle. 

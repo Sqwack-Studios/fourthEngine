@@ -81,7 +81,7 @@ void ClientApp::PostInit()
 	dsc.isCubemap = false;
 	dsc.numMips = 1;
 
-	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/cuadrao51px.dds");
+	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/cuadrao256.dds");
 
 
 	m_aperturefft0.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);

@@ -430,7 +430,7 @@ void main(uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
     
     if(!isFirstPass)
     {
-        const float scaleFactor = useCustomScale? signalScaleFactor(isForward, invSingalLength) * g_fftSamplingPeriod : signalScaleFactor(isForward, invSingalLength);
+        const float scaleFactor = useCustomScale? invSingalLength * g_fftSamplingPeriod : invSingalLength;
 
         scaleSignal(threadBuffer, scaleFactor);
     }

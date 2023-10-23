@@ -42,19 +42,22 @@ void main( uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
     
     if (!isFirstPass)
     {
+        float waveFocal = g_apertureSize / (g_wavelength * g_focalDistance);
+        float waveScale0 = waveFocal * waveFocal;
+        //float waveScale = 1.0f/waveScale0;
+        float waveScale = 1.0f;
+
+        const float scaleFactor = useCustomScale ? invSingalLength * waveScale:
+                                                   invSingalLength;
+
+        scaleSignal(threadBuffer, scaleFactor);
+
         [unroll(RADIX)]
         for (uint r = 0; r < RADIX; ++r)
         {
             threadBuffer[0][r] = complexMult(threadBuffer[0][r], complexConjugate(threadBuffer[0][r]));
         }
-        
-        float invWaveFocal = g_apertureSize / (g_wavelength * g_focalDistance);
-        float waveScale0 = invWaveFocal * invWaveFocal;
-        float waveScale = 1.0f/waveScale0;
-        const float scaleFactor = useCustomScale ? signalScaleFactor(isForward, invSingalLength) * waveScale:
-                                                   signalScaleFactor(isForward, invSingalLength);
 
-        scaleSignal(threadBuffer, scaleFactor);
             
     }
 

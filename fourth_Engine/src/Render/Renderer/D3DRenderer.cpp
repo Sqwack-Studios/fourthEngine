@@ -163,7 +163,7 @@ namespace fth
 			//meta.meta = { FFT_FLAGS::HORIZONTAL | FORWARD | FIRST_PASS | SHIFT };
 
 
-			constexpr float apertureSize = 2.0f;//1mm
+			constexpr float apertureSize = 0.5f;//1mm
 			constexpr float wavelength = 532.0e-6f;
 			constexpr float sensorSize = 20.0f;
 			constexpr float focalLength = 20.0f;

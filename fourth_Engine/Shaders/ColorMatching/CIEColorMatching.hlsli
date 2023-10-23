@@ -84,6 +84,8 @@ float computeColorCorrelatedTemperatureFromCromaticity(in const float2 xy)
      return -449.0f * n3 + 3525.0f * n2 - 6823.3f * n + 5520.33f;
 }
 
+//TODO: float2 computeCromaticityFromColorCorrelatedTemperature(in const float CCT)
+
 //---------D illuminant S0, S1, S2 curves. Each index represents a wavelength, each step is 5nm. If a value gets past or under the [360, 780] range, it gets clamped.
 //wavelength start: 380nm
 //wavelength end:   780nm
