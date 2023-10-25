@@ -95,6 +95,12 @@ private:
 	fth::renderer::UnorderedAccessView m_aperturefft1UAV;
 	fth::renderer::UnorderedAccessView m_intermediatefft0UAV;
 	fth::renderer::UnorderedAccessView m_intermediatefft1UAV;
+
+	fth::renderer::ComputeShader       m_dispersionCS;
+
+	float                              m_focalLength;
+	float                              m_sensorSize;
+	float                              m_wavelength;
 };
 
 

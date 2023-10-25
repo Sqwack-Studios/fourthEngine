@@ -96,7 +96,7 @@ namespace fth
 				return instance;
 			};
 
-			void computeTestFFT(const Texture& src, UnorderedAccessView* targets, ShaderResourceView** targetsSRV, UnorderedAccessView* intermediates, uint16_t sizeX, uint16_t sizeY);
+			
 
 
 
@@ -385,17 +385,7 @@ namespace fth
 			float         pad1[2];
 		};
 
-		struct aperturefft
-		{
-			uint32_t      meta;
-			float         samplingPeriod;
-			float         samplingFrequency;
-			float         wavelength;
 
-			float         focalDistance;
-			math::Vector2 shift;
-			float         apertureSize;
-		};
 
 		struct fftdata2
 		{

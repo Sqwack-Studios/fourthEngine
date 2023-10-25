@@ -1,5 +1,6 @@
 #include "../Common.hlsli"
 #include "../ColorMatching/CIEColorMatching.hlsli"
+#include "../PostProcessing/Resolve.hlsli"
 #ifndef _APERTURE_DISPERSION_CS_HLSL
 #define _APERTURE_DISPERSION_CS_HLSL
 
@@ -54,9 +55,10 @@ cbuffer dispersionParams : register(CB_PP_0)
     float    g_frequencyStep;
     float    g_focalDistance;
     float    g_spatialStep;
-    float    pad0;
+    float    g_wavelength;
     //
     float2   g_kernelCenter;
+    float    pad1[2];
 };
 
 
@@ -65,7 +67,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 {
     const uint2 targetTexel = DTid.xy; //This is the texel were we want to compute the dispersion
 
-    if (targetTexel.x >= uint(g_signalLength.x) || targetTexel.y >= uint(g_signalLength.y))
+    if (targetTexel.x >= uint(g_signalLength.x) || targetTexel.y >= uint(g_signalLength.x))
         return;
 
     const uint signalLength = float(g_signalLength.x);
@@ -76,20 +78,22 @@ void main(uint3 DTid : SV_DispatchThreadID)
     
     float3 finalColor = float3(0.0f, 0.0f, 0.0f);
     
-    for (uint s = 0; s < 3; ++s)
-    {
-        const float wavelength_um = sampleWave[s];
+   //for (uint s = 0; s < 1; ++s)
+   //{
+        const float wavelength_um = g_wavelength;//sampleWave[s];
         const float wavelength_nm = wavelength_um * 1e+3f;
-        const float2 frequencyUV = position / (g_focalDistance * wavelength_um) + g_kernelCenter; //fourier domain coords displaced by the kernel center
+        const float2 frequencyUV = (position / (g_focalDistance * wavelength_um))/g_maxFrequency + g_kernelCenter; //fourier domain coords displaced by the kernel center
         
         //now we sample D65 illuminant for this wavelength
-        //const float D65_spectrum = sample_Dxy_illuminant(wavelength_nm, CIE1931_D65_xy);
-        const float3 XYZ = float3(X_Fit_1931(wavelength_nm), Y_Fit_1931(wavelength_nm), Z_Fit_1931(wavelength_nm));
+        const float D65_spectrum = sample_Dxy_illuminant(wavelength_nm, CIE1931_D65_xy);
+        const float3 XYZ = D65_spectrum * float3(X_Fit_1931(wavelength_nm), Y_Fit_1931(wavelength_nm), Z_Fit_1931(wavelength_nm));
 
-        finalColor += XYZ_to_RGB(XYZ) * sourcePattern.SampleLevel(g_bilinearClamp, frequencyUV, 0.0f);
-    }
+        finalColor += XYZ_to_RGB(XYZ) * sourcePattern.SampleLevel(g_bilinearClamp, frequencyUV, 0.0f).r;
+   //}
 
+    //polychromaticPattern[targetTexel] = acesHdr2Ldr(finalColor);
     polychromaticPattern[targetTexel] = finalColor;
+
 }
 
 

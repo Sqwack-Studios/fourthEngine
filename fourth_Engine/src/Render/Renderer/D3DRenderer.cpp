@@ -140,66 +140,7 @@ namespace fth
 			m_mainCamera.UpdateViewPortSettings(vpSettings);
 			m_mainCamera.UpdateMatrices();
 		}
-		void D3DRenderer::computeTestFFT(const Texture& src, UnorderedAccessView* targets, ShaderResourceView** targetsSRV, UnorderedAccessView* intermediates, uint16_t sizeX, uint16_t sizeY)
-		{
-			src.GetSRV().BindCS(SRV_PP_SLOT0);
-
-			targets[0].BindCS(UAV_PP_COMPUTE_SLOT0);
-			//targets[1].BindCS(UAV_PP_COMPUTE_SLOT1);
-			//m_fft0_CS.bind();
-
-			enum FFT_FLAGS
-			{
-				HORIZONTAL   = 0x01,
-				FORWARD      = 0x02,
-				FIRST_PASS   = 0x04,
-				CUSTOM_SCALE = 0x08,
-				SHIFT        = 0x10
-			};
-
-			m_fftAperture_CS.bind();
-			//m_fftdouble_CS.bind();
-			//fftdata meta;
-			//meta.meta = { FFT_FLAGS::HORIZONTAL | FORWARD | FIRST_PASS | SHIFT };
-
-
-			constexpr float apertureSize = 0.5f;//1mm
-			constexpr float wavelength = 532.0e-6f;
-			constexpr float sensorSize = 20.0f;
-			constexpr float focalLength = 20.0f;
-			aperturefft meta;
-			meta.meta = { FFT_FLAGS::HORIZONTAL | FORWARD | FIRST_PASS | CUSTOM_SCALE | SHIFT  };
-			meta.samplingPeriod = sensorSize / 1024.0f;
-			meta.samplingFrequency = 1024.0f / sensorSize;
-			meta.wavelength = wavelength;
-			meta.focalDistance = focalLength;
-			meta.apertureSize = apertureSize;
-			meta.shift = { 0.5f, 0.5f };
-			{
-				aperturefft* map = static_cast<aperturefft*>(m_fftUniform.Map());
-				memcpy(map, &meta, sizeof(aperturefft));
-				m_fftUniform.Unmap();
-				m_fftUniform.BindCS(2);
-			}
-			ComputeShader::dispatch(sizeX, 1, 1);
-
-			meta.meta &= ~(HORIZONTAL | FIRST_PASS);
-			intermediates[0].BindCS(UAV_PP_COMPUTE_SLOT0);
-			//intermediates[1].BindCS(UAV_PP_COMPUTE_SLOT1);
-			targetsSRV[0]->BindCS(SRV_PP_SLOT0);
-			//targetsSRV[1]->BindCS(SRV_PP_SLOT1);
-
-			{
-				aperturefft* map = static_cast<aperturefft*>(m_fftUniform.Map());
-				memcpy(map, &meta, sizeof(aperturefft));
-				m_fftUniform.Unmap();
-				m_fftUniform.BindCS(2);
-			}
-
-			//add vertical pass
-			//m_fft1_CS.bind();
-			ComputeShader::dispatch(sizeY, 1, 1);
-		};
+	
 		void D3DRenderer::Init(uint16_t width, uint16_t height, uint16_t multisamples)
 		{
 

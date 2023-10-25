@@ -30,7 +30,10 @@ ClientApp::ClientApp(const EngineAppSpecs& specs):
 	m_dissolutionSpawnDistance(0.5f),
 	m_dissolutionDuration(2.0f),
     m_dissolutionInitialTime(0.0f),
-	discardUpdate(false)
+	discardUpdate(false),
+	m_focalLength(1000.0f),
+	m_sensorSize(1000.0f),
+	m_wavelength(0.380f)
 {
 
 	
@@ -71,17 +74,19 @@ void ClientApp::PostInit()
 	ImGui_ImplWin32_Init(GetBaseWindow().GetHWND());
 	ImGui_ImplDX11_Init(s_device, s_devcon);
 
+	constexpr uint32_t resX{ 1024u };
+	constexpr uint32_t resY{ 1024u };
 	TextureDsc dsc;
 	dsc.arraySize = 1;
-	dsc.width  = 1024;
-	dsc.height = 1024;
+	dsc.width  = resX;
+	dsc.height = resY;
 	dsc.depth = 1;
 	dsc.dimension = D3D11_RESOURCE_DIMENSION_TEXTURE2D;
 	dsc.format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	dsc.isCubemap = false;
 	dsc.numMips = 1;
 
-	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/cuadrao256.dds");
+	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/cuadrao.dds");
 
 
 	m_aperturefft0.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);
@@ -102,15 +107,7 @@ void ClientApp::PostInit()
 	m_intermediatefft0UAV.createTextureUAV(m_intermediatefft0.GetResource(), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, 0);
 	m_intermediatefft1UAV.createTextureUAV(m_intermediatefft1.GetResource(), DXGI_FORMAT_R32G32B32A32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, 0);
 
-	renderer::ShaderResourceView* srvs[2] = { &m_aperturefft0.GetSRV(), &m_aperturefft1.GetSRV() };
-	renderer::D3DRenderer::Get().computeTestFFT(*m_aperture, &m_aperturefft0UAV, &srvs[0], &m_intermediatefft0UAV, 1024, 1024);
-
-	renderer::UnorderedAccessView::ClearCS(0);
-	renderer::UnorderedAccessView::ClearCS(1);
-
-	renderer::ShaderResourceView::ClearCS(64);
-	renderer::ShaderResourceView::ClearCS(65);
-
+	
 }
 
 void ClientApp::Update(float DeltaTime)
@@ -219,7 +216,15 @@ void ClientApp::Update(float DeltaTime)
 		ImGui::Image((void*)m_aperturefft0.GetSRV().getView(), ImVec2(1024, 1024));
 		ImGui::Image((void*)m_intermediatefft0.GetSRV().getView(), ImVec2(1024, 1024));
 		ImGui::End();
+
+		ImGui::Begin("Debug Dispersion");
+		ImGui::SliderFloat("Focal Length", &m_focalLength, 1.0f, 1e+4);
+		ImGui::SliderFloat("Sensor Size", &m_sensorSize, 10.0f, 500.f);
+		ImGui::SliderFloat("Wavelength", &m_wavelength, 0.680f, 0.460f);
+		ImGui::Image((void*)m_intermediatefft1.GetSRV().getView(), ImVec2(1024, 1024));
+		ImGui::End();
 	}
+
 
 	if (discardUpdate)
 	{
@@ -376,6 +381,129 @@ void ClientApp::Update(float DeltaTime)
 
 void ClientApp::OnRender()
 {
+	constexpr uint32_t resX{ 1024u };
+	constexpr uint32_t resY{ 1024u };
+
+	renderer::ComputeShader diffractionCS, dispersionCS;
+	diffractionCS.loadShader(L"ApertureDiffraction_CS.cso");
+	dispersionCS.loadShader(L"ApertureDispersion_CS.cso");
+
+	renderer::UniformBuffer uniform;
+
+	struct aperturefft
+	{
+		uint32_t      meta;
+		float         samplingPeriod;
+		float         samplingFrequency;
+		float         wavelength;
+
+		float         focalDistance;
+		math::Vector2 shift;
+		float         apertureSize;
+	};
+
+	uniform.CreateGPUBuffer(sizeof(aperturefft), 1, nullptr);
+
+	enum FFT_FLAGS
+	{
+		HORIZONTAL = 0x01,
+		FORWARD = 0x02,
+		FIRST_PASS = 0x04,
+		CUSTOM_SCALE = 0x08,
+		SHIFT = 0x10
+	};
+
+
+	//micrometers
+	constexpr float apertureSize = 0.5f;    
+	constexpr float wavelength = 532.0e-6f;
+	float sensorSize = m_sensorSize;
+	float focalLength = m_focalLength;
+	aperturefft meta;
+	meta.meta = { FFT_FLAGS::HORIZONTAL | FORWARD | FIRST_PASS | CUSTOM_SCALE | SHIFT };
+	meta.samplingPeriod = sensorSize / 1024.0f;
+	meta.samplingFrequency = 1024.0f / sensorSize;
+	meta.wavelength = wavelength;
+	meta.focalDistance = focalLength;
+	meta.apertureSize = apertureSize;
+	meta.shift = { 0.5f, 0.5f };
+	{
+		aperturefft* map = static_cast<aperturefft*>(uniform.Map());
+		memcpy(map, &meta, sizeof(aperturefft));
+		uniform.Unmap();
+		uniform.BindCS(2);
+	}
+
+	m_aperture->GetSRV().BindCS(64);
+	m_aperturefft0UAV.BindCS(0);
+
+	diffractionCS.bind();
+	renderer::ComputeShader::dispatch(resX, 1, 1);
+
+	meta.meta &= ~(HORIZONTAL | FIRST_PASS);
+	m_intermediatefft0UAV.BindCS(0);
+	m_aperturefft0.GetSRV().BindCS(64);
+
+	{
+		aperturefft* map = static_cast<aperturefft*>(uniform.Map());
+		memcpy(map, &meta, sizeof(aperturefft));
+		uniform.Unmap();
+		uniform.BindCS(2);
+	}
+
+	//add vertical pass
+	//m_fft1_CS.bind();
+	renderer::ComputeShader::dispatch(resX, 1, 1);
+
+	renderer::UnorderedAccessView::ClearCS(0);
+	renderer::UnorderedAccessView::ClearCS(1);
+
+	renderer::ShaderResourceView::ClearCS(64);
+	renderer::ShaderResourceView::ClearCS(65);
+
+
+	struct dispersionCSdsc
+	{
+		uint32_t        samples;
+		math::Vector2   signalLength;
+		float           maxFrequency;
+		//
+		float           freqcuencyStep;
+		float           focalDistance;
+		float           spatialStep;
+		float           wavelength;
+
+		math::Vector2   kernelCenterUV;
+		float           pad1[2];
+	};
+
+	dispersionCSdsc dispDesc;
+	dispDesc.samples = 3u;
+	dispDesc.signalLength = { static_cast<float>(resX), 1.0f/static_cast<float>(resX) };
+	dispDesc.maxFrequency = 0.5f * static_cast<float>(resX) / sensorSize;
+	dispDesc.focalDistance = focalLength;
+	dispDesc.spatialStep = sensorSize / static_cast<float>(resX);
+	dispDesc.freqcuencyStep = 1.0f / sensorSize;
+	dispDesc.kernelCenterUV = { 0.5f, 0.5f };
+	dispDesc.wavelength = m_wavelength;
+	uniform.CreateGPUBuffer(sizeof(dispersionCSdsc), 1, nullptr);
+
+	dispersionCSdsc* map = static_cast<dispersionCSdsc*>(uniform.Map());
+	memcpy(map, &dispDesc, sizeof(dispersionCSdsc));
+	uniform.Unmap();
+
+	m_intermediatefft0.GetSRV().BindCS(64);
+	m_intermediatefft1UAV.BindCS(0);
+	dispersionCS.bind();
+	uniform.BindCS(2);
+	renderer::ComputeShader::dispatch(resX / 8, resY / 8, 1);
+
+	renderer::UnorderedAccessView::ClearCS(0);
+	renderer::UnorderedAccessView::ClearCS(1);
+
+	renderer::ShaderResourceView::ClearCS(64);
+	renderer::ShaderResourceView::ClearCS(65);
+
 	renderer::D3DRenderer::Get().BindLDR_Target();
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

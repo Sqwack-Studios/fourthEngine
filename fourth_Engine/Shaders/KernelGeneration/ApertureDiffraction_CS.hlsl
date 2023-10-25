@@ -47,8 +47,9 @@ void main( uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
         //float waveScale = 1.0f/waveScale0;
         float waveScale = 1.0f;
 
-        const float scaleFactor = useCustomScale ? invSingalLength * waveScale:
-                                                   invSingalLength;
+        float invSignalLengtSq = invSingalLength;//* invSingalLength;
+        const float scaleFactor = useCustomScale ? invSignalLengtSq * waveScale:
+                                                   invSignalLengtSq;
 
         scaleSignal(threadBuffer, scaleFactor);
 
