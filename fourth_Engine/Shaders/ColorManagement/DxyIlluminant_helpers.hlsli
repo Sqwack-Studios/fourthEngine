@@ -2,16 +2,18 @@
 #define _DXY_ILLUMINANT_HELPERS_HLSLI_
 
 //D65 white point CIE1931 chromaticity coordinates
-#define CIE1931_D65_xy float2(0.31271f, 0.32902f)
+static const float2 D65_WHITE_xy = float2(0.31271f, 0.32902f);
 
 //D65 integration result of the D65 relative spectral distribution from [380, 780] 1nm binned
-#define CIE1931_D65_INTEGRATION 35180.2319666f
-#define CIE1931_D65_INVINTEGRATION 0.000028425f
+static const float CIE1931_D_SPECTRUM_INTEGRATION = 35180.2319666f;
+static const float CIE1931_D_SPECTRUM_INVINTEGRATION = 0.000028425f;
 
 
-#define LUMINOUS_EFFICACY 653.002f //lumens/W
-//#define CIE1931_D65_x 0.31271f      
-//#define CIE1931_D65_y 0.32902f    
+static const float LUMINOUS_EFFICACY = 653.002f; //lumens/W
+
+static const float D_SPECTRUM_MIN_WAVELENGTH = 380.0f;  //nm
+static const float D_SPECTRUM_MAX_WAVELENGTH = 780.0f;  //nm
+static const float D_SPECTRUM_STEP           = 5.0f;    //nm
 
 
 //The D illuminant can be used to approximate the daylight spectrum between 4000K and 25,000K. Based on what we consider our white point, the spectrum changes, and also XYZ->RGB relationship.

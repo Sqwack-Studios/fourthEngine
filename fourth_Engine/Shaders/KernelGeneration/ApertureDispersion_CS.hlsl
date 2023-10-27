@@ -1,5 +1,7 @@
 #include "../Common.hlsli"
-#include "../ColorMatching/CIEColorMatching.hlsli"
+#include "../ColorManagement/CIEColorMatching.hlsli"
+#include "../ColorManagement/ColorSpace.hlsli"
+
 #include "../PostProcessing/Resolve.hlsli"
 #ifndef _APERTURE_DISPERSION_CS_HLSL
 #define _APERTURE_DISPERSION_CS_HLSL
@@ -85,10 +87,10 @@ void main(uint3 DTid : SV_DispatchThreadID)
         const float2 frequencyUV = (position / (g_focalDistance * wavelength_um))/g_maxFrequency + g_kernelCenter; //fourier domain coords displaced by the kernel center
         
         //now we sample D65 illuminant for this wavelength
-        const float D65_spectrum = sample_Dxy_illuminant(wavelength_nm, CIE1931_D65_xy);
-        const float3 XYZ = D65_spectrum * float3(X_Fit_1931(wavelength_nm), Y_Fit_1931(wavelength_nm), Z_Fit_1931(wavelength_nm));
+        //const float D65_spectrum = sample_Dxy_illuminant(wavelength_nm, D65_WHITE_xy);
+        const float3 XYZ = float3(x_Fit_1931(wavelength_nm), y_Fit_1931(wavelength_nm), z_Fit_1931(wavelength_nm));
 
-        finalColor += XYZ_to_RGB(XYZ) * sourcePattern.SampleLevel(g_bilinearClamp, frequencyUV, 0.0f).r;
+    finalColor += clipRGB(XYZ_to_RGB(XYZ)) * sourcePattern.SampleLevel(g_bilinearClamp, frequencyUV, 0.0f).r;
    //}
 
     //polychromaticPattern[targetTexel] = acesHdr2Ldr(finalColor);
