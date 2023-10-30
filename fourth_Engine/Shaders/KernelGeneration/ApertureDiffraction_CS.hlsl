@@ -8,6 +8,7 @@
 //During second pass, SRV is output complex, UAV is powerDensity
 Texture2D<float4>    apertureFunction : register(SRV_PP_0);
 RWTexture2D<float4>      powerDensity : register(UAV_PP_COMPUTE_0);
+RWStructuredBuffer<float>         DC  : register(UAV_PP_COMPUTE_1);
 
 cbuffer apertureUniform : register(CB_PP_0)
 {
@@ -42,24 +43,19 @@ void main( uint3 tid : SV_GroupThreadID, uint3 gid : SV_GroupID)
     
     if (!isFirstPass)
     {
-        float waveFocal = g_apertureSize / (g_wavelength * g_focalDistance);
-        float waveScale0 = waveFocal * waveFocal;
-        //float waveScale = 1.0f/waveScale0;
-        float waveScale = 1.0f;
-
-        float invSignalLengtSq = invSingalLength;//* invSingalLength;
-        const float scaleFactor = useCustomScale ? invSignalLengtSq * waveScale:
-                                                   invSignalLengtSq;
-
-        scaleSignal(threadBuffer, scaleFactor);
-
-        [unroll(RADIX)]
-        for (uint r = 0; r < RADIX; ++r)
         {
-            threadBuffer[0][r] = complexMult(threadBuffer[0][r], complexConjugate(threadBuffer[0][r]));
+            [unroll(RADIX)]
+            for (uint r = 0; r < RADIX; ++r)
+            {
+                threadBuffer[0][r] = complexMult(threadBuffer[0][r], complexConjugate(threadBuffer[0][r]));
+            }
         }
 
-            
+         if(scanLine == 0 && localThreadID == 0)
+         {
+              DC[0] = 1.0f/threadBuffer[0][0].x; // first value of the resulting signal is the DC value
+         }
+       
     }
 
     saveLocalBufferToDestination(threadBuffer, isHorizontal, shift && !isFirstPass, scanLine, localThreadID, dataStride, g_uvShift, powerDensity);

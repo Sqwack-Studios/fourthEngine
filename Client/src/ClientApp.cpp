@@ -86,7 +86,7 @@ void ClientApp::PostInit()
 	dsc.isCubemap = false;
 	dsc.numMips = 1;
 
-	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/cuadrao.dds");
+	m_aperture = TextureManager::Get().LoadTextures("Textures/Apertures/JWST.dds");
 
 
 	m_aperturefft0.Init(dsc, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS);
@@ -453,6 +453,18 @@ void ClientApp::OnRender()
 
 	//add vertical pass
 	//m_fft1_CS.bind();
+	renderer::StructuredBuffer<float> sbuff;
+	renderer::UnorderedAccessView sbuffUAV;
+	renderer::ShaderResourceView sbuffSRV;
+
+	renderer::ViewBufferDsc bfDsc;
+	bfDsc.firstElement = 0;
+	bfDsc.numElements = 1;
+	sbuff.init(1, D3D11_USAGE_DEFAULT, D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE, 0, 0, nullptr);
+	sbuffSRV.CreateShaderResourceBuffer(sbuff.operator->(), DXGI_FORMAT_UNKNOWN, bfDsc);
+	sbuffUAV.CreateBufferUAV(sbuff.operator->(), DXGI_FORMAT_UNKNOWN, bfDsc, 0);
+	sbuffUAV.BindCS(1);
+
 	renderer::ComputeShader::dispatch(resX, 1, 1);
 
 	renderer::UnorderedAccessView::ClearCS(0);
@@ -493,9 +505,14 @@ void ClientApp::OnRender()
 	uniform.Unmap();
 
 	m_intermediatefft0.GetSRV().BindCS(64);
+	sbuffSRV.BindCS(65);
 	m_intermediatefft1UAV.BindCS(0);
 	dispersionCS.bind();
 	uniform.BindCS(2);
+
+
+
+
 	renderer::ComputeShader::dispatch(resX / 8, resY / 8, 1);
 
 	renderer::UnorderedAccessView::ClearCS(0);
