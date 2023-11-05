@@ -40,9 +40,9 @@ fourthEngine is a pet engine made from scratch as a personal project to learn pr
 
 ### How to build ###
 
-Clone the repo and run "GenerateProject.bat" in the root of the project. Open the solution and compile the project. SPDLOG is crashing the compiler using VisualStudio 17.7.
-NOTE: IBLGenerator project is non-compilant right now.
-
+Clone the repo and run "GenerateProject.bat" in the root of the project. Open the solution and compile the project. 
+NOTE1: SPDLOG is crashing the compiler using VisualStudio 17.7. IBLGenerator project is non-compilant right now.
+NOTE2: This project is using git submodules. Please remember to pull them.
 ### Configurations ###
 ->Debug: No optimizations, debug symbols, logging
 ->Release: Optimizations turned on, debug symbols, logging
