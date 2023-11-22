@@ -1,7 +1,7 @@
 #ifndef _APERTURE_DIFFRACTION_CS
 #define _APERTURE_DIFFRACTION_CS
 
-#define NUM_CHANNELS 2
+#define NUM_CHANNELS 1
 
 #include "../Compute/FFTs.hlsli"
 //During first pass, SRV is apertureFunction, UAV is output complex

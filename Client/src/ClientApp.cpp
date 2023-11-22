@@ -219,7 +219,7 @@ void ClientApp::Update(float DeltaTime)
 
 		ImGui::Begin("Debug Dispersion");
 		ImGui::SliderFloat("Focal Length", &m_focalLength, 1.0f, 1e+4);
-		ImGui::SliderFloat("Sensor Size", &m_sensorSize, 10.0f, 500.f);
+		ImGui::SliderFloat("Sensor Size", &m_sensorSize, 10.0f, 1000.f);
 		ImGui::SliderFloat("Wavelength", &m_wavelength, 0.680f, 0.460f);
 		ImGui::Image((void*)m_intermediatefft1.GetSRV().getView(), ImVec2(1024, 1024));
 		ImGui::End();

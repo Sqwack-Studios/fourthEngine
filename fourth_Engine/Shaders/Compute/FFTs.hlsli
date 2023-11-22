@@ -72,7 +72,7 @@ void loadSrcToLocalBuffer(
             loadValue.yw = float2(0.0f, 0.0f);
             
             threadBuffer[0][r] = loadValue.xy;
-            threadBuffer[1][r] = loadValue.zw;
+            //threadBuffer[1][r] = loadValue.zw;
         }
 
     }
@@ -85,7 +85,7 @@ void loadSrcToLocalBuffer(
         {
             loadValue = src[texel];
             threadBuffer[0][r] = loadValue.xy;
-            threadBuffer[1][r] = loadValue.zw;
+            //threadBuffer[1][r] = loadValue.zw;
         }
 
     }
@@ -101,7 +101,7 @@ void saveLocalBufferToDestination(
                    in const float2 shift,
                    in RWTexture2D<float4> dst)
 {
-    float4 dstValue;
+    float4 dstValue = 0.0f;
     uint2 texel, finalTexel;
     if(isHorizontal)
     {
@@ -119,7 +119,7 @@ void saveLocalBufferToDestination(
                 finalTexel = uv * SIGNAL_LENGTH;
             }
             dstValue.xy = threadBuffer[0][r];
-            dstValue.zw = threadBuffer[1][r];
+            //dstValue.zw = threadBuffer[1][r];
             dst[finalTexel] = dstValue;
         }
 
@@ -147,7 +147,7 @@ void saveLocalBufferToDestination(
             //}
             //dstValue.x = float(localThread);
             //dstValue.y = float(scanLine);
-            dstValue.zw = threadBuffer[1][r];
+            //dstValue.zw = threadBuffer[1][r];
             dst[finalTexel] = dstValue;
         }
 
