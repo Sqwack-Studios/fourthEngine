@@ -137,6 +137,8 @@ float3 clipRGB_clamp_neg(in const float3 RGB)
 //             
 //          Actually, we want to preserve relative brightnesses; so instead of moving toward white, we need to shrink the out-of-range vector toward the gray point with the same brightness, Y, as the point in the spectrum we are simulating. 
 //          That means that the correction factor is Y/(Y - G). Call this correction factor F; then the corrected G intensities are Ggamut limit = Y + F * (Gspectrum - Y)
+
+//*********NEEDS MORE TESTING**************//
 float3 clipRGB_add_white_preserveBrightness(in const float3 RGB, in const float Y)
 {
     float3 F = Y / (Y - RGB);

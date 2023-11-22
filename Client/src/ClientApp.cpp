@@ -945,8 +945,21 @@ void ClientApp::CreateShowcaseScene()
 
 	renderer::D3DRenderer::Get().SetSkybox("grass_field.dds");
 	
+	spawnShowcase();
+
+	
+	m_attatchedFlashlight = true;
+
+	if (m_attatchedFlashlight)
+	{
+		LightSystem::Get().QuerySpotLight(m_flashlightID).parentID = CameraManager::GetActiveCamera().GetIDInverseView();
+	}
 
 
+}
+
+void ClientApp::spawnShowcase()
+{
 	shading::OpaqueGroup::InstanceData opaqueInstanceData[20];
 
 	constexpr uint32_t numHorseInstances{ 5 };
@@ -965,9 +978,9 @@ void ClientApp::CreateShowcaseScene()
 	for (uint32_t i = 0; i < numHorseInstances; ++i)
 	{
 		math::Transform transform{ math::Transform::Initial };
-	    transform.position.x += 2.0f * i + 2.0f;
+		transform.position.x += 2.0f * i + 2.0f;
 		transform.scale *= (i * 0.33f + 1.0f);
-	
+
 		opaqueInstanceData[i].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 	}
 	MeshSystem::Get().addOpaqueInstances(opaqueModelHandles[SAMURAI_HANDLE_IDX], opaqueMaterialHandles[SAMURAI_HANDLE_IDX].data(), opaqueInstanceData, numHorseInstances, static_cast<uint32_t>(opaqueMaterialHandles[SAMURAI_HANDLE_IDX].size()));
@@ -1052,7 +1065,7 @@ void ClientApp::CreateShowcaseScene()
 		instanceData[2].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 
 		transform.position.x = -7.5f;
-		transform.position.y =  7.5f;
+		transform.position.y = 7.5f;
 		transform.rotation = math::Quaternion::CreateFromAxisAngle(math::Vector3::Up, -1.0f * DirectX::XM_PIDIV2);
 		instanceData[3].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 
@@ -1077,7 +1090,7 @@ void ClientApp::CreateShowcaseScene()
 		instanceData[8].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 
 		transform.position.z = -7.5f;
-		transform.position.y =  7.5f;
+		transform.position.y = 7.5f;
 		instanceData[9].handle_modelToWorld = TransformSystem::Get().AddTransform(transform);
 
 		transform.rotation = math::Quaternion::Identity;
@@ -1088,7 +1101,7 @@ void ClientApp::CreateShowcaseScene()
 		constexpr uint8_t NUM_CUBES{ 4 };//4 rows of cubes, each cube with its own material
 		transform = math::Transform::Initial;
 
-		transform.position.y =  9.25f;
+		transform.position.y = 9.25f;
 		transform.position.x = -3.75f;
 		transform.position.z = 0.5f;
 		transform.scale = math::Vector3::One * 0.5f;
@@ -1170,16 +1183,7 @@ void ClientApp::CreateShowcaseScene()
 
 		MeshSystem::Get().addOpaqueInstances(opaqueModelHandle, &opaqueQuadMatHandles[3], &instanceData[2], 1, 1);
 	}
-	m_attatchedFlashlight = true;
-
-	if (m_attatchedFlashlight)
-	{
-		LightSystem::Get().QuerySpotLight(m_flashlightID).parentID = CameraManager::GetActiveCamera().GetIDInverseView();
-	}
-
-
 }
-
 
 void ClientApp::LoadTexturesAndModels()
 {

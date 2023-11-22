@@ -29,6 +29,7 @@ public:
 	void HandleRotation();
 	void DragObjects();
 	void CreateShowcaseScene();
+	void spawnShowcase();
 	void CreateDissolutionInstance(fth::Handle<fth::shading::DissolutionGroup::PerModel> modelHandle, const fth::Handle<fth::shading::DissolutionGroup::Material>* materialHandles, uint32_t numMeshes);
 	void IncinerateInstance();
 

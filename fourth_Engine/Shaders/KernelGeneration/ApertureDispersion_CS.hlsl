@@ -88,37 +88,21 @@ void main(uint3 DTid : SV_DispatchThreadID)
         const float wavelength_um = wave * 1e-3f;
         const float wavelength_nm = wave;
         const float2 frequencyUV = (position / (g_focalDistance * wavelength_um))/g_maxFrequency + g_kernelCenter; //fourier domain coords displaced by the kernel center
-        const float scale = 10000.0f / (wavelength_um * wavelength_um * g_focalDistance * g_focalDistance);
+        const float scale = 1.0f / (wavelength_um * wavelength_um * g_focalDistance * g_focalDistance);
         //now we sample D65 illuminant for this wavelength
         const float D65_spectrum = D65_DATASET2[idx];
         float3 XYZ = xyz_CIE1931_COLOR_MATCHING[idx + 20];
-        XYZ *= D65_spectrum * 0.003975f * LUMINOUS_EFFICACY;
+        XYZ *= D65_spectrum * LUMINOUS_EFFICACY;
         
         XYZ = clipRGB_add_white(XYZ_to_RGB(XYZ));
-        //XYZ *= 1.85f;
-        //
-        //float a = max(XYZ.x, max(XYZ.y, XYZ.z)) + 1e-4f;
-        //XYZ /= a;
         finalColor +=  scale * XYZ * sourcePattern.SampleLevel(g_trilinearClamp, frequencyUV, 0.0f).r;
         ++idx;
    }
    
     
-   //for (uint s = 0; s < 3; ++s)
-   //{
-   //    const float wavelength_um = sampleWave[s];
-   //    const float wavelength_nm = wavelength_um * 1e+3;
-   //    const float2 frequencyUV = (position / (g_focalDistance * wavelength_um))/g_maxFrequency + g_kernelCenter; //fourier domain coords displaced by the kernel center
-   //    const float scale = 10000.0f / (wavelength_um * wavelength_um * g_focalDistance * g_focalDistance);
-   //    
-   //    float3 XYZ = float3(x_Fit_1931(wavelength_nm), y_Fit_1931(wavelength_nm), z_Fit_1931(wavelength_nm));
-   //    
-   //    finalColor += scale * clipRGB_add_white(XYZ_to_RGB(XYZ)) * invDC * sourcePattern.SampleLevel(g_bilinearClamp, frequencyUV, 0.0f).r;
-   //}
-    
     finalColor = adjustExposure(finalColor, g_EV100);
     finalColor = clipRGB(linearRGB_to_sRGB(acesHdr2Ldr(finalColor)));
-   polychromaticPattern[targetTexel] = float4(finalColor, 1.0f);
+    polychromaticPattern[targetTexel] = float4(finalColor, 1.0f);
 
   //float3 finalColor = clipRGB(XYZ_to_RGB(xyz_CIE1931_COLOR_MATCHING[targetTexel.x % 471]));
   //
